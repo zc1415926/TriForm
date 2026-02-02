@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Upload, Users } from 'lucide-react';
+import { BookOpen, FileText, Folder, LayoutGrid, Upload, Users, Calendar } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -28,9 +28,19 @@ const mainNavItems: NavItem[] = [
         icon: Users,
     },
     {
+        title: '课时管理',
+        href: '/lessons',
+        icon: Calendar,
+    },
+    {
         title: '上传类型管理',
         href: '/upload-types',
         icon: Upload,
+    },
+    {
+        title: '作业管理',
+        href: '/assignments',
+        icon: FileText,
     },
 ];
 
