@@ -5,6 +5,18 @@ import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import { initializeTheme } from './hooks/use-appearance';
 
+// Silently ignore Inertia prefetch aborted errors
+window.addEventListener('unhandledrejection', (event) => {
+    if (
+        event.reason &&
+        typeof event.reason === 'object' &&
+        'message' in event.reason &&
+        event.reason.message === 'Request aborted'
+    ) {
+        event.preventDefault();
+    }
+});
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
