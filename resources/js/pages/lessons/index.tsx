@@ -95,6 +95,7 @@ export default function LessonIndex() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [deletingLessonId, setDeletingLessonId] = useState<number | null>(null);
+    const [tempLessonId, setTempLessonId] = useState<string>('');
 
     // 表单状态
     const { data, setData, processing, errors, reset, clearErrors } =
@@ -148,6 +149,8 @@ export default function LessonIndex() {
         setData('year', new Date().getFullYear().toString());
         setData('content', '');
         setData('assignments', []);
+        // 生成临时 lessonId
+        setTempLessonId(`temp_${Date.now()}`);
         setIsCreateModalOpen(true);
     };
 
@@ -179,8 +182,31 @@ export default function LessonIndex() {
     // 提交创建表单
     const handleCreateSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post(store().url, data);
-        setIsCreateModalOpen(false);
+        router.post(store().url, data, {
+            onSuccess: (page) => {
+                // 如果有临时 lessonId，移动图片到正确位置
+                if (tempLessonId) {
+                    const newLessonId = (page.props as any).lessons?.[0]?.id;
+                    if (newLessonId) {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        fetch('/api/upload/move-lesson-images', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || '',
+                            },
+                            body: JSON.stringify({
+                                year: data.year,
+                                temp_lesson_id: tempLessonId,
+                                real_lesson_id: newLessonId.toString(),
+                            }),
+                        });
+                    }
+                }
+                setIsCreateModalOpen(false);
+                setTempLessonId('');
+            },
+        });
     };
 
     // 提交编辑表单
@@ -321,6 +347,7 @@ export default function LessonIndex() {
                                     content={data.content}
                                     onChange={(content) => setData('content', content)}
                                     year={data.year}
+                                    lessonId={tempLessonId}
                                 />
                                 {errors.content && (
                                     <p className="text-sm text-red-600">{errors.content}</p>

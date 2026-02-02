@@ -15,7 +15,7 @@ class UploadController extends Controller
         $request->validate([
             'upload' => 'required|image|max:10240', // 最大10MB
             'year' => 'required|string',
-            'lesson_id' => 'required|integer',
+            'lesson_id' => 'required|string', // 可以是临时ID或真实ID
         ]);
 
         $file = $request->file('upload');
@@ -35,6 +35,43 @@ class UploadController extends Controller
 
         return response()->json([
             'url' => $url,
+        ]);
+    }
+
+    /**
+     * 移动临时文件夹的图片到正确的文件夹
+     */
+    public function moveLessonImages(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|string',
+            'temp_lesson_id' => 'required|string',
+            'real_lesson_id' => 'required|string',
+        ]);
+
+        $year = $request->input('year');
+        $tempLessonId = $request->input('temp_lesson_id');
+        $realLessonId = $request->input('real_lesson_id');
+
+        $tempPath = "uploads/{$year}/{$tempLessonId}";
+        $realPath = "uploads/{$year}/{$realLessonId}";
+
+        // 如果临时文件夹存在且不为空
+        if (Storage::disk('public')->exists($tempPath)) {
+            $files = Storage::disk('public')->files($tempPath);
+
+            foreach ($files as $file) {
+                $fileName = basename($file);
+                // 移动文件
+                Storage::disk('public')->move($file, "{$realPath}/{$fileName}");
+            }
+
+            // 删除临时文件夹
+            Storage::disk('public')->deleteDirectory($tempPath);
+        }
+
+        return response()->json([
+            'success' => true,
         ]);
     }
 }

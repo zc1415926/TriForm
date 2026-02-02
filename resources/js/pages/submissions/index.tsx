@@ -37,6 +37,7 @@ interface Student {
 interface Lesson {
     id: number;
     name: string;
+    content?: string;
     assignments: {
         id: number;
         name: string;
@@ -66,6 +67,7 @@ export default function SubmissionIndex() {
     const [students, setStudents] = useState<Student[]>([]);
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [loading, setLoading] = useState(false);
 
     // 格式化文件大小
@@ -110,6 +112,10 @@ export default function SubmissionIndex() {
                 params: { lesson_id: lessonId },
             });
             setAssignments(assignmentsRes.data);
+
+            // 设置选中的课时
+            const lesson = lessons.find(l => l.id.toString() === lessonId);
+            setSelectedLesson(lesson || null);
 
             // 初始化作业文件数组
             setData(
@@ -242,6 +248,16 @@ export default function SubmissionIndex() {
                                 </Select>
                             )}
                         </div>
+
+                        {/* 课时内容显示 */}
+                        {selectedLesson && selectedLesson.content && (
+                            <div className="space-y-2">
+                                <Label>课时内容</Label>
+                                <div className="rounded-md border p-4 tiptap-editor-content">
+                                    <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
+                                </div>
+                            </div>
+                        )}
 
                         {/* 作业上传区域 */}
                         <div className="space-y-4">

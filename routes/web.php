@@ -21,6 +21,7 @@ Route::resource('assignments', \App\Http\Controllers\AssignmentController::class
 Route::resource('lessons', \App\Http\Controllers\LessonController::class);
 
 Route::post('api/upload/ckeditor-image', [\App\Http\Controllers\UploadController::class, 'ckeditorImage']);
+Route::post('api/upload/move-lesson-images', [\App\Http\Controllers\UploadController::class, 'moveLessonImages']);
 
 Route::get('submissions', [\App\Http\Controllers\SubmissionController::class, 'index'])->name('submissions.index');
 Route::post('submissions', [\App\Http\Controllers\SubmissionController::class, 'store'])->name('submissions.store');

@@ -46,7 +46,17 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file || !editor || !year || !lessonId) return;
+        console.log('Image upload triggered, file:', file);
+        console.log('Year:', year, 'LessonId:', lessonId);
+        
+        if (!file || !editor || !year || !lessonId) {
+            console.log('Missing required data');
+            return;
+        }
+
+        // 获取 CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        console.log('CSRF Token:', csrfToken);
 
         const formData = new FormData();
         formData.append('upload', file);
@@ -54,16 +64,25 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
         formData.append('lesson_id', lessonId.toString());
 
         try {
+            console.log('Uploading image...');
             const response = await fetch('/api/upload/ckeditor-image', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
                 body: formData,
             });
 
+            console.log('Response status:', response.status);
+
             if (response.ok) {
                 const data = await response.json();
+                console.log('Upload success, URL:', data.url);
                 editor.chain().focus().setImage({ src: data.url }).run();
             } else {
-                console.error('图片上传失败');
+                console.error('图片上传失败, status:', response.status);
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
             }
         } catch (error) {
             console.error('图片上传错误:', error);
@@ -155,24 +174,24 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     <Redo className="h-4 w-4" />
                 </Button>
                 <div className="w-px h-6 bg-border mx-1" />
-                <label className="cursor-pointer">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        disabled={!year || !lessonId}
-                    />
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        as="span"
-                        disabled={!year || !lessonId}
-                    >
-                        <ImageIcon className="h-4 w-4" />
-                    </Button>
-                </label>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                        const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+                        if (input) input.click();
+                    }}
+                    disabled={!year || !lessonId}
+                >
+                    <ImageIcon className="h-4 w-4" />
+                </Button>
+                <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                />
             </div>
 
             {/* 编辑器内容 */}

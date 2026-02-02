@@ -42,7 +42,7 @@ class SubmissionController extends Controller
             ->where('is_active', true)
             ->with('assignments:id,name,lesson_id')
             ->orderBy('name')
-            ->get(['id', 'name', 'year']);
+            ->get(['id', 'name', 'year', 'content']);
 
         return response()->json($lessons);
     }
