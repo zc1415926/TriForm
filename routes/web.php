@@ -14,4 +14,6 @@ Route::get('dashboard', function () {
 
 Route::resource('students', StudentController::class);
 
+Route::resource('upload-types', \App\Http\Controllers\UploadTypeController::class);
+
 require __DIR__.'/settings.php';
