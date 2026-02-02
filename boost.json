@@ -1,0 +1,23 @@
+{
+    "agents": [
+        "copilot",
+        "opencode",
+        "gemini",
+        "junie",
+        "cursor",
+        "codex",
+        "claude_code"
+    ],
+    "guidelines": true,
+    "herd_mcp": false,
+    "mcp": true,
+    "packages": [
+        "laravel/fortify"
+    ],
+    "sail": false,
+    "skills": [
+        "wayfinder-development",
+        "pest-testing",
+        "developing-with-fortify"
+    ]
+}
