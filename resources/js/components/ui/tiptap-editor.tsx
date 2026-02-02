@@ -14,7 +14,19 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ content, onChange, year, lessonId }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                heading: {
+                    levels: [1, 2, 3, 4, 5, 6],
+                },
+                bulletList: {
+                    keepMarks: true,
+                    keepAttributes: false,
+                },
+                orderedList: {
+                    keepMarks: true,
+                    keepAttributes: false,
+                },
+            }),
             Image.configure({
                 inline: true,
                 allowBase64: true,
@@ -26,7 +38,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
         },
         editorProps: {
             attributes: {
-                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[300px] max-h-[500px] overflow-y-auto p-4 border rounded-lg',
+                class: 'tiptap-editor-content mx-auto focus:outline-none min-h-[300px] max-h-[500px] overflow-y-auto p-4 border rounded-lg',
             },
         },
         immediatelyRender: false,
@@ -73,7 +85,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }}
+                    onClick={() => editor.chain().focus().toggleBold().run()}
                     className={editor.isActive('bold') ? 'bg-muted' : ''}
                 >
                     <Bold className="h-4 w-4" />
@@ -82,7 +94,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run(); }}
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
                     className={editor.isActive('italic') ? 'bg-muted' : ''}
                 >
                     <Italic className="h-4 w-4" />
@@ -91,7 +103,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 1 }).run(); }}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                     className={editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}
                 >
                     <Heading1 className="h-4 w-4" />
@@ -100,7 +112,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run(); }}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     className={editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}
                 >
                     <Heading2 className="h-4 w-4" />
@@ -109,7 +121,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBulletList().run(); }}
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
                     className={editor.isActive('bulletList') ? 'bg-muted' : ''}
                 >
                     <List className="h-4 w-4" />
@@ -118,7 +130,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleOrderedList().run(); }}
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     className={editor.isActive('orderedList') ? 'bg-muted' : ''}
                 >
                     <ListOrdered className="h-4 w-4" />
@@ -128,7 +140,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().undo().run(); }}
+                    onClick={() => editor.chain().focus().undo().run()}
                     disabled={!editor.can().undo()}
                 >
                     <Undo className="h-4 w-4" />
@@ -137,7 +149,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().redo().run(); }}
+                    onClick={() => editor.chain().focus().redo().run()}
                     disabled={!editor.can().redo()}
                 >
                     <Redo className="h-4 w-4" />
