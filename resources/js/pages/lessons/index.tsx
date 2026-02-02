@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { index, store, update, destroy } from '@/routes/lessons';
+import RichTextEditor from '@/components/ui/tiptap-editor';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -51,6 +52,7 @@ interface Lesson {
     name: string;
     year: string;
     is_active: boolean;
+    content: string | null;
     created_at: string;
     assignments_count: number;
     assignments: {
@@ -80,6 +82,7 @@ type LessonFormData = {
     name: string;
     year: string;
     is_active: boolean;
+    content: string;
     assignments: AssignmentData[];
 };
 
@@ -99,6 +102,7 @@ export default function LessonIndex() {
             name: '',
             year: new Date().getFullYear().toString(),
             is_active: true,
+            content: '',
             assignments: [],
         });
 
@@ -142,6 +146,7 @@ export default function LessonIndex() {
         clearErrors();
         reset();
         setData('year', new Date().getFullYear().toString());
+        setData('content', '');
         setData('assignments', []);
         setIsCreateModalOpen(true);
     };
@@ -154,6 +159,7 @@ export default function LessonIndex() {
             name: lesson.name,
             year: lesson.year,
             is_active: lesson.is_active,
+            content: lesson.content || '',
             assignments: lesson.assignments.map((assignment) => ({
                 name: assignment.name,
                 upload_type_id: assignment.upload_type_id.toString(),
@@ -306,6 +312,18 @@ export default function LessonIndex() {
                                 />
                                 {errors.year && (
                                     <p className="text-sm text-red-600">{errors.year}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="content">课时内容</Label>
+                                <RichTextEditor
+                                    content={data.content}
+                                    onChange={(content) => setData('content', content)}
+                                    year={data.year}
+                                />
+                                {errors.content && (
+                                    <p className="text-sm text-red-600">{errors.content}</p>
                                 )}
                             </div>
 
@@ -474,6 +492,19 @@ export default function LessonIndex() {
                                 />
                                 {errors.year && (
                                     <p className="text-sm text-red-600">{errors.year}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-content">课时内容</Label>
+                                <RichTextEditor
+                                    content={data.content}
+                                    onChange={(content) => setData('content', content)}
+                                    year={data.year}
+                                    lessonId={selectedLesson?.id}
+                                />
+                                {errors.content && (
+                                    <p className="text-sm text-red-600">{errors.content}</p>
                                 )}
                             </div>
 

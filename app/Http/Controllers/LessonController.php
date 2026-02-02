@@ -30,6 +30,7 @@ class LessonController extends Controller
             'name' => 'required|string|max:255',
             'year' => 'required|string|max:10',
             'is_active' => 'required|boolean',
+            'content' => 'nullable|string',
             'assignments' => 'nullable|array',
             'assignments.*.name' => 'required|string|max:255',
             'assignments.*.upload_type_id' => 'required|exists:upload_types,id',
@@ -41,10 +42,11 @@ class LessonController extends Controller
             'name' => $validated['name'],
             'year' => $validated['year'],
             'is_active' => $validated['is_active'],
+            'content' => $validated['content'] ?? null,
         ]);
 
         // 创建作业
-        if (!empty($validated['assignments'])) {
+        if (! empty($validated['assignments'])) {
             foreach ($validated['assignments'] as $assignmentData) {
                 Assignment::create([
                     'name' => $assignmentData['name'],
@@ -72,6 +74,7 @@ class LessonController extends Controller
             'name' => 'required|string|max:255',
             'year' => 'required|string|max:10',
             'is_active' => 'required|boolean',
+            'content' => 'nullable|string',
             'assignments' => 'nullable|array',
             'assignments.*.name' => 'required|string|max:255',
             'assignments.*.upload_type_id' => 'required|exists:upload_types,id',
@@ -83,6 +86,7 @@ class LessonController extends Controller
             'name' => $validated['name'],
             'year' => $validated['year'],
             'is_active' => $validated['is_active'],
+            'content' => $validated['content'] ?? null,
         ]);
 
         // 更新作业（删除原有作业，创建新作业）

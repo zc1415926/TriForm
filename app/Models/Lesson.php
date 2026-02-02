@@ -11,6 +11,7 @@ class Lesson extends Model
         'name',
         'year',
         'is_active',
+        'content',
     ];
 
     protected $casts = [
