@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "triform/3d-course-management",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "3D 选修课管理系统 - 基于 Laravel 和 React 的现代化课程管理平台",
     "keywords": [
         "laravel",
         "framework"

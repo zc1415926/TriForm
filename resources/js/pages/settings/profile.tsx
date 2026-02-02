@@ -29,6 +29,29 @@ export default function Profile({
 }) {
     const { auth } = usePage<SharedData>().props;
 
+    // 如果用户未登录，显示提示信息
+    if (!auth.user) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Profile settings" />
+                <div className="flex h-full items-center justify-center">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold">请先登录</h2>
+                        <p className="mt-2 text-muted-foreground">
+                            您需要登录才能访问此页面
+                        </p>
+                        <Link
+                            href="/login"
+                            className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                        >
+                            前往登录
+                        </Link>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Profile settings" />
@@ -58,7 +81,7 @@ export default function Profile({
                                     <Input
                                         id="name"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
+                                        defaultValue={auth.user!.name}
                                         name="name"
                                         required
                                         autoComplete="name"
@@ -78,7 +101,7 @@ export default function Profile({
                                         id="email"
                                         type="email"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
+                                        defaultValue={auth.user!.email}
                                         name="email"
                                         required
                                         autoComplete="username"
@@ -92,7 +115,7 @@ export default function Profile({
                                 </div>
 
                                 {mustVerifyEmail &&
-                                    auth.user.email_verified_at === null && (
+                                    auth.user!.email_verified_at === null && (
                                         <div>
                                             <p className="-mt-4 text-sm text-muted-foreground">
                                                 Your email address is
