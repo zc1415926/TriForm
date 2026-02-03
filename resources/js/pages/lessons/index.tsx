@@ -29,9 +29,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import RichTextEditor from '@/components/ui/tiptap-editor';
 import AppLayout from '@/layouts/app-layout';
 import { index, store, update, destroy } from '@/routes/lessons';
-import RichTextEditor from '@/components/ui/tiptap-editor';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [

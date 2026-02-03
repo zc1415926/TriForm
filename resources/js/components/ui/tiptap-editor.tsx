@@ -1,6 +1,6 @@
+import Image from '@tiptap/extension-image';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
 import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Image as ImageIcon, Undo, Redo } from 'lucide-react';
 import { Button } from './button';
 

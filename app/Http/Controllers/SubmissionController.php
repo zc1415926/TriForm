@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Assignment;
 use App\Models\Lesson;
 use App\Models\Submission;
-use App\Models\UploadType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -66,22 +65,41 @@ class SubmissionController extends Controller
             'assignments' => 'required|array',
             'assignments.*.assignment_id' => 'required|exists:assignments,id',
             'assignments.*.file' => 'required|file|max:102400',
+            'assignments.*.preview_image' => 'nullable|image|max:5120',
         ]);
+
+        $student = \App\Models\Student::findOrFail($validated['student_id']);
 
         foreach ($validated['assignments'] as $assignmentData) {
             $file = $assignmentData['file'];
-            $assignment = Assignment::findOrFail($assignmentData['assignment_id']);
+            $previewImage = $assignmentData['preview_image'] ?? null;
+            $assignment = Assignment::with('lesson')->findOrFail($assignmentData['assignment_id']);
             $uploadType = $assignment->uploadType;
 
             // 验证文件类型
             $extension = strtolower($file->getClientOriginalExtension());
-            if (!in_array($extension, $uploadType->extensions)) {
+            if (! in_array($extension, $uploadType->extensions)) {
                 return redirect()->back()->with('error', "作业「{$assignment->name}」的文件类型不支持");
             }
 
             // 验证文件大小
             if ($file->getSize() > $uploadType->max_size) {
                 return redirect()->back()->with('error', "作业「{$assignment->name}」的文件大小超出限制");
+            }
+
+            // 构建存储路径：年份/课时ID/作业ID/
+            $year = $assignment->lesson->year;
+            $lessonId = $assignment->lesson->id;
+            $assignmentId = $assignment->id;
+            $storagePath = "submissions/{$year}/{$lessonId}/{$assignmentId}";
+
+            // 存储文件
+            $filePath = $file->store($storagePath);
+            $previewImagePath = null;
+
+            // 存储预览图（如果存在）
+            if ($previewImage) {
+                $previewImagePath = $previewImage->store($storagePath);
             }
 
             // 检查是否已提交
@@ -91,15 +109,21 @@ class SubmissionController extends Controller
 
             if ($existingSubmission) {
                 // 删除旧文件
-                if (file_exists(storage_path('app/' . $existingSubmission->file_path))) {
-                    unlink(storage_path('app/' . $existingSubmission->file_path));
+                if (file_exists(storage_path('app/'.$existingSubmission->file_path))) {
+                    unlink(storage_path('app/'.$existingSubmission->file_path));
+                }
+
+                // 删除旧预览图
+                if ($existingSubmission->preview_image_path && file_exists(storage_path('app/'.$existingSubmission->preview_image_path))) {
+                    unlink(storage_path('app/'.$existingSubmission->preview_image_path));
                 }
 
                 // 更新提交记录
                 $existingSubmission->update([
-                    'file_path' => $file->store('submissions'),
+                    'file_path' => $filePath,
                     'file_name' => $file->getClientOriginalName(),
                     'file_size' => $file->getSize(),
+                    'preview_image_path' => $previewImagePath,
                     'status' => 'pending',
                 ]);
             } else {
@@ -107,9 +131,10 @@ class SubmissionController extends Controller
                 Submission::create([
                     'student_id' => $validated['student_id'],
                     'assignment_id' => $assignmentData['assignment_id'],
-                    'file_path' => $file->store('submissions'),
+                    'file_path' => $filePath,
                     'file_name' => $file->getClientOriginalName(),
                     'file_size' => $file->getSize(),
+                    'preview_image_path' => $previewImagePath,
                     'status' => 'pending',
                 ]);
             }

@@ -1,6 +1,7 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { StlPreviewGenerator } from '@/components/stl-preview-generator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,13 +55,44 @@ interface Assignment {
     };
 }
 
+// 记忆化的 STL 预览组件，防止不必要的重新渲染
+const MemoizedStlPreview = React.memo(function MemoizedStlPreview({
+    file,
+    previewFile,
+    onPreviewGenerated,
+}: {
+    file: File;
+    previewFile?: File;
+    onPreviewGenerated: (previewFile: File) => void;
+}) {
+    if (previewFile) {
+        const previewUrl = URL.createObjectURL(previewFile);
+        return (
+            <img
+                src={previewUrl}
+                alt="STL 预览"
+                className="w-full rounded-lg border"
+                style={{ aspectRatio: '16/10' }}
+            />
+        );
+    }
+
+    return (
+        <StlPreviewGenerator
+            file={file}
+            onPreviewGenerated={onPreviewGenerated}
+        />
+    );
+});
+
 export default function SubmissionIndex() {
     const { years, success, error } = usePage<PageProps>().props;
+    const renderCountRef = useRef(0);
 
     // 表单状态
     const { data, setData, processing } = useForm({
         student_id: '',
-        assignments: [] as { assignment_id: string; file: File | null }[],
+        assignments: [] as { assignment_id: string; file: File | null; preview_image?: File }[],
     });
 
     // 下拉数据
@@ -69,6 +101,12 @@ export default function SubmissionIndex() {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // 调试日志
+    useEffect(() => {
+        renderCountRef.current++;
+        console.log(`[SubmissionIndex] 渲染 #${renderCountRef.current}, assignments.length:`, data?.assignments?.length);
+    });
 
     // 格式化文件大小
     const formatFileSize = (bytes: number): string => {
@@ -134,13 +172,28 @@ export default function SubmissionIndex() {
 
     // 处理文件选择
     const handleFileChange = (index: number, file: File | null) => {
+        console.log('[SubmissionIndex] handleFileChange called, index:', index, 'file:', file?.name);
         const updatedAssignments = [...data.assignments];
         updatedAssignments[index] = {
             ...updatedAssignments[index],
             file,
+            preview_image: undefined,
         };
         setData('assignments', updatedAssignments);
+        console.log('[SubmissionIndex] setData assignments 完成');
     };
+
+    // 处理预览图生成
+    const handlePreviewGenerated = useCallback((index: number, previewFile: File) => {
+        console.log('[SubmissionIndex] handlePreviewGenerated called, index:', index, 'previewFile:', previewFile.name);
+        const updatedAssignments = [...data.assignments];
+        updatedAssignments[index] = {
+            ...updatedAssignments[index],
+            preview_image: previewFile,
+        };
+        setData('assignments', updatedAssignments);
+        console.log('[SubmissionIndex] setData assignments with preview 完成');
+    }, [data.assignments, setData]);
 
     // 提交表单
     const handleSubmit = async (e: React.FormEvent) => {
@@ -152,6 +205,10 @@ export default function SubmissionIndex() {
             if (assignment.file) {
                 formData.append(`assignments[${index}][assignment_id]`, assignment.assignment_id);
                 formData.append(`assignments[${index}][file]`, assignment.file);
+                if (assignment.preview_image) {
+                    // 直接使用 File 对象
+                    formData.append(`assignments[${index}][preview_image]`, assignment.preview_image);
+                }
             }
         });
 
@@ -300,6 +357,20 @@ export default function SubmissionIndex() {
                                                         {data.assignments[index].file.name}
                                                     </p>
                                                 )}
+                                                {/* STL 预览图生成器 */}
+                                                {data.assignments[index]?.file &&
+                                                    assignment.upload_type.extensions.includes('stl') && (
+                                                        <div className="mt-2">
+                                                            <Label>预览图</Label>
+                                                            <MemoizedStlPreview
+                                                                file={data.assignments[index].file!}
+                                                                previewFile={data.assignments[index].preview_image}
+                                                                onPreviewGenerated={(previewFile) =>
+                                                                    handlePreviewGenerated(index, previewFile)
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                     ))}

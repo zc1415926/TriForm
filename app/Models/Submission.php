@@ -13,6 +13,7 @@ class Submission extends Model
         'file_path',
         'file_name',
         'file_size',
+        'preview_image_path',
         'status',
         'score',
         'feedback',
