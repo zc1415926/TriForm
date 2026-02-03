@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FileText, Folder, LayoutGrid, Upload, Users, Calendar, UploadCloud } from 'lucide-react';
+import { BookOpen, FileText, Folder, LayoutGrid, Upload, Users, Calendar, UploadCloud, Eye } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -46,6 +46,11 @@ const mainNavItems: NavItem[] = [
         title: '作品提交',
         href: '/submissions',
         icon: UploadCloud,
+    },
+    {
+        title: '查看作品',
+        href: '/submissions/show',
+        icon: Eye,
     },
 ];
 

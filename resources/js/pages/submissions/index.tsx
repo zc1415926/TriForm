@@ -4,6 +4,14 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StlPreviewGenerator } from '@/components/stl-preview-generator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -53,6 +61,7 @@ interface Assignment {
         extensions: string[];
         max_size: number;
     };
+    is_required: boolean;
 }
 
 // 记忆化的 STL 预览组件，防止不必要的重新渲染
@@ -71,8 +80,7 @@ const MemoizedStlPreview = React.memo(function MemoizedStlPreview({
             <img
                 src={previewUrl}
                 alt="STL 预览"
-                className="w-full rounded-lg border"
-                style={{ aspectRatio: '16/10' }}
+                className="max-w-full rounded-lg border"
             />
         );
     }
@@ -101,6 +109,12 @@ export default function SubmissionIndex() {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // 模态框状态
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogTitle, setDialogTitle] = useState('');
+    const [dialogMessage, setDialogMessage] = useState('');
+    const [isSuccessDialog, setIsSuccessDialog] = useState(false);
 
     // 调试日志
     useEffect(() => {
@@ -199,6 +213,29 @@ export default function SubmissionIndex() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // 检查是否至少上传了一个文件
+        const hasFiles = data.assignments.some(assignment => assignment.file !== null);
+        if (!hasFiles) {
+            setDialogTitle('提示');
+            setDialogMessage('请至少上传一个作业文件');
+            setDialogOpen(true);
+            return;
+        }
+
+        // 检查是否有必须提交的作业未上传
+        const requiredAssignments = assignments.filter(a => a.is_required);
+        const missingRequiredAssignments = requiredAssignments.filter(
+            a => !data.assignments.find(da => da.assignment_id === a.id.toString())?.file
+        );
+
+        if (missingRequiredAssignments.length > 0) {
+            const missingNames = missingRequiredAssignments.map(a => a.name).join('、');
+            setDialogTitle('提示');
+            setDialogMessage(`以下作业为必须提交，请上传：\n${missingNames}`);
+            setDialogOpen(true);
+            return;
+        }
+
         const formData = new FormData();
         formData.append('student_id', data.student_id);
         data.assignments.forEach((assignment, index) => {
@@ -218,9 +255,32 @@ export default function SubmissionIndex() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            window.location.reload();
-        } catch (error) {
+            // 显示成功提示，然后刷新页面
+            setDialogTitle('成功');
+            setDialogMessage('作品提交成功！');
+            setIsSuccessDialog(true);
+            setDialogOpen(true);
+            // 2秒后刷新页面
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } catch (error: any) {
             console.error('提交失败:', error);
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const errorMessages = Object.values(errors).flat().join('\n');
+                setDialogTitle('提交失败');
+                setDialogMessage(errorMessages);
+                setDialogOpen(true);
+            } else if (error.response?.data?.message) {
+                setDialogTitle('提交失败');
+                setDialogMessage(error.response.data.message);
+                setDialogOpen(true);
+            } else {
+                setDialogTitle('提交失败');
+                setDialogMessage('请稍后重试');
+                setDialogOpen(true);
+            }
         }
     };
 
@@ -326,7 +386,12 @@ export default function SubmissionIndex() {
                                     {assignments.map((assignment, index) => (
                                         <div key={assignment.id} className="rounded-lg border p-4 space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="font-medium">{assignment.name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-medium">{assignment.name}</h3>
+                                                    {assignment.is_required && (
+                                                        <Badge variant="destructive" className="text-xs">必须提交</Badge>
+                                                    )}
+                                                </div>
                                                 <Badge variant="outline">{assignment.upload_type.name}</Badge>
                                             </div>
                                             <div className="text-sm text-muted-foreground space-y-1">
@@ -391,6 +456,25 @@ export default function SubmissionIndex() {
                     </form>
                 </div>
             </div>
+
+            {/* 提示模态框 */}
+            <Dialog open={dialogOpen} onOpenChange={isSuccessDialog ? undefined : setDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{dialogTitle}</DialogTitle>
+                        <DialogDescription className="whitespace-pre-line">
+                            {dialogMessage}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        {isSuccessDialog ? (
+                            <Button disabled>即将刷新...</Button>
+                        ) : (
+                            <Button onClick={() => setDialogOpen(false)}>确定</Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

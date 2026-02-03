@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\Lesson;
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class SubmissionController extends Controller
@@ -20,6 +21,20 @@ class SubmissionController extends Controller
             ->map(fn ($year) => (string) $year);
 
         return Inertia::render('submissions/index', [
+            'years' => $years,
+        ]);
+    }
+
+    public function show(): \Inertia\Response
+    {
+        // 获取学生表中存在的年份
+        $years = \App\Models\Student::select('year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->map(fn ($year) => (string) $year);
+
+        return Inertia::render('submissions/show', [
             'years' => $years,
         ]);
     }
@@ -53,9 +68,20 @@ class SubmissionController extends Controller
             ->where('is_published', true)
             ->with('uploadType:id,name,extensions,max_size')
             ->orderBy('name')
-            ->get(['id', 'name', 'upload_type_id']);
+            ->get(['id', 'name', 'upload_type_id', 'is_required']);
 
         return response()->json($assignments);
+    }
+
+    public function getSubmissionsByAssignment(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $assignmentId = $request->query('assignment_id');
+        $submissions = Submission::where('assignment_id', $assignmentId)
+            ->with(['student:id,name,year', 'assignment:id,name'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($submissions);
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -93,13 +119,13 @@ class SubmissionController extends Controller
             $assignmentId = $assignment->id;
             $storagePath = "submissions/{$year}/{$lessonId}/{$assignmentId}";
 
-            // 存储文件
-            $filePath = $file->store($storagePath);
+            // 存储文件（使用 public 磁盘以便通过 Web 访问）
+            $filePath = $file->store($storagePath, 'public');
             $previewImagePath = null;
 
             // 存储预览图（如果存在）
             if ($previewImage) {
-                $previewImagePath = $previewImage->store($storagePath);
+                $previewImagePath = $previewImage->store($storagePath, 'public');
             }
 
             // 检查是否已提交
@@ -108,14 +134,12 @@ class SubmissionController extends Controller
                 ->first();
 
             if ($existingSubmission) {
-                // 删除旧文件
-                if (file_exists(storage_path('app/'.$existingSubmission->file_path))) {
-                    unlink(storage_path('app/'.$existingSubmission->file_path));
-                }
+                // 删除旧文件（使用 Storage facade 处理）
+                \Storage::disk('public')->delete($existingSubmission->file_path);
 
                 // 删除旧预览图
-                if ($existingSubmission->preview_image_path && file_exists(storage_path('app/'.$existingSubmission->preview_image_path))) {
-                    unlink(storage_path('app/'.$existingSubmission->preview_image_path));
+                if ($existingSubmission->preview_image_path) {
+                    \Storage::disk('public')->delete($existingSubmission->preview_image_path);
                 }
 
                 // 更新提交记录
