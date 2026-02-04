@@ -36,5 +36,6 @@ Route::get('api/submissions/submissions-by-assignment', [\App\Http\Controllers\S
 Route::get('api/submissions/all', [\App\Http\Controllers\SubmissionController::class, 'getAllSubmissions']);
 Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore']);
 Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore']);
+Route::delete('api/submissions/{id}', [\App\Http\Controllers\SubmissionController::class, 'destroy']);
 
 require __DIR__.'/settings.php';

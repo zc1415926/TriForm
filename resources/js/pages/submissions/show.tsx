@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StlModelViewer } from '@/components/stl-model-viewer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,10 +87,10 @@ interface Submission {
 export default function SubmissionShow() {
     const { years } = usePage<PageProps>().props;
 
-    // 筛选状态
-    const [selectedYear, setSelectedYear] = useState('');
-    const [selectedLesson, setSelectedLesson] = useState('');
-    const [selectedAssignment, setSelectedAssignment] = useState('');
+    // 筛选状态 - 默认选择最新年份
+    const [selectedYear, setSelectedYear] = useState(years[0] || '');
+    const [selectedLesson, setSelectedLesson] = useState<string>('');
+    const [selectedAssignment, setSelectedAssignment] = useState<string>('all');
 
     // 数据状态
     const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -110,6 +110,11 @@ export default function SubmissionShow() {
         submission: Submission | null;
     } | null>(null);
 
+    // 删除确认模态框状态
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [submissionToDelete, setSubmissionToDelete] = useState<Submission | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // 格式化文件大小
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 B';
@@ -124,18 +129,38 @@ export default function SubmissionShow() {
         return new Date(dateString).toLocaleString('zh-CN');
     };
 
-    // 年份改变时加载课时
-    const handleYearChange = async (year: string) => {
-        setSelectedYear(year);
-        setSelectedLesson('');
-        setSelectedAssignment('');
-        setAssignments([]);
-        setSubmissions([]);
+    // 初始化加载最新年份的课时
+    useEffect(() => {
+        if (selectedYear) {
+            loadLessonsByYear(selectedYear);
+        }
+    }, []);
 
+    // 加载指定年份的课时和提交记录
+    const loadLessonsByYear = async (year: string) => {
         setLoading(true);
         try {
+            // 加载课时
             const lessonsRes = await axios.get('/api/submissions/lessons-by-year', { params: { year } });
-            setLessons(lessonsRes.data);
+            const lessonsData = lessonsRes.data;
+            setLessons(lessonsData);
+
+            // 如果有课时，自动选择第一个课时
+            if (lessonsData.length > 0) {
+                setSelectedLesson(lessonsData[0].id.toString());
+
+                // 加载第一个课时的所有提交记录和作业列表
+                const submissionsRes = await axios.get('/api/submissions/all');
+                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                    s.assignment.lesson_id === lessonsData[0].id
+                );
+                setSubmissions(filteredSubmissions);
+
+                const assignmentsRes = await axios.get('/api/submissions/assignments-by-lesson', {
+                    params: { lesson_id: lessonsData[0].id },
+                });
+                setAssignments(assignmentsRes.data);
+            }
         } catch (error) {
             console.error('加载课时失败:', error);
         } finally {
@@ -143,20 +168,67 @@ export default function SubmissionShow() {
         }
     };
 
-    // 课时改变时加载作业
-    const handleLessonChange = async (lessonId: string) => {
-        setSelectedLesson(lessonId);
-        setSelectedAssignment('');
+    // 年份改变时加载课时并自动选择第一个课时
+    const handleYearChange = async (year: string) => {
+        setSelectedYear(year);
+        setSelectedLesson('');
+        setSelectedAssignment('all');
+        setLessons([]);
+        setAssignments([]);
         setSubmissions([]);
 
         setLoading(true);
         try {
+            // 加载课时
+            const lessonsRes = await axios.get('/api/submissions/lessons-by-year', { params: { year } });
+            const lessonsData = lessonsRes.data;
+            setLessons(lessonsData);
+
+            // 如果有课时，自动选择第一个课时
+            if (lessonsData.length > 0) {
+                setSelectedLesson(lessonsData[0].id.toString());
+
+                // 加载第一个课时的所有提交记录和作业列表
+                const submissionsRes = await axios.get('/api/submissions/all');
+                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                    s.assignment.lesson_id === lessonsData[0].id
+                );
+                setSubmissions(filteredSubmissions);
+
+                const assignmentsRes = await axios.get('/api/submissions/assignments-by-lesson', {
+                    params: { lesson_id: lessonsData[0].id },
+                });
+                setAssignments(assignmentsRes.data);
+            }
+        } catch (error) {
+            console.error('加载课时失败:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 课时改变时加载作业和提交记录
+    const handleLessonChange = async (lessonId: string) => {
+        setSelectedLesson(lessonId);
+        setSelectedAssignment('all');
+        setAssignments([]);
+
+        setLoading(true);
+        try {
+            const submissionsRes = await axios.get('/api/submissions/all');
+
+            // 加载该课时的提交记录和作业列表
+            const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                s.assignment.lesson_id === parseInt(lessonId)
+            );
+            setSubmissions(filteredSubmissions);
+
             const assignmentsRes = await axios.get('/api/submissions/assignments-by-lesson', {
                 params: { lesson_id: lessonId },
             });
             setAssignments(assignmentsRes.data);
         } catch (error) {
-            console.error('加载作业失败:', error);
+            console.error('加载数据失败:', error);
         } finally {
             setLoading(false);
         }
@@ -165,6 +237,24 @@ export default function SubmissionShow() {
     // 作业改变时加载提交记录
     const handleAssignmentChange = async (assignmentId: string) => {
         setSelectedAssignment(assignmentId);
+
+        // 如果选择"所有作业"（assignmentId 为 'all'），加载该课时的所有提交记录
+        if (assignmentId === 'all') {
+            setLoading(true);
+            try {
+                const submissionsRes = await axios.get('/api/submissions/all');
+                // 过滤出该课时的提交
+                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                    s.assignment.lesson_id === parseInt(selectedLesson)
+                );
+                setSubmissions(filteredSubmissions);
+            } catch (error) {
+                console.error('加载提交记录失败:', error);
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
 
         setLoading(true);
         try {
@@ -214,6 +304,39 @@ export default function SubmissionShow() {
         }
     };
 
+    // 打开删除确认对话框
+    const handleDeleteClick = (submission: Submission) => {
+        setSubmissionToDelete(submission);
+        setDeleteDialogOpen(true);
+    };
+
+    // 确认删除
+    const handleDeleteConfirm = async () => {
+        if (!submissionToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await axios.delete(`/api/submissions/${submissionToDelete.id}`);
+
+            // 从列表中移除已删除的记录
+            setSubmissions((prev) => prev.filter((s) => s.id !== submissionToDelete.id));
+
+            // 关闭对话框
+            setDeleteDialogOpen(false);
+            setSubmissionToDelete(null);
+        } catch (error) {
+            console.error('删除失败:', error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // 取消删除
+    const handleDeleteCancel = () => {
+        setDeleteDialogOpen(false);
+        setSubmissionToDelete(null);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="查看作品" />
@@ -245,12 +368,12 @@ export default function SubmissionShow() {
                         {/* 课时筛选 */}
                         <div className="space-y-2">
                             <Label htmlFor="lesson">课时</Label>
-                            {loading && lessons.length === 0 ? (
+                            {loading && lessons.length === 0 && selectedYear ? (
                                 <div className="text-sm text-muted-foreground">加载中...</div>
                             ) : (
-                                <Select onValueChange={handleLessonChange} value={selectedLesson} disabled={loading || !selectedYear}>
+                                <Select onValueChange={handleLessonChange} value={selectedLesson} disabled={loading || !selectedYear || lessons.length === 0}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={lessons.length === 0 ? "请先选择年份" : "请选择课时"} />
+                                        <SelectValue placeholder={!selectedYear ? "请先选择年份" : "请选择课时"} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {lessons.map((lesson) => (
@@ -266,14 +389,15 @@ export default function SubmissionShow() {
                         {/* 作业筛选 */}
                         <div className="space-y-2">
                             <Label htmlFor="assignment">作业</Label>
-                            {loading && assignments.length === 0 ? (
+                            {loading && assignments.length === 0 && selectedLesson ? (
                                 <div className="text-sm text-muted-foreground">加载中...</div>
                             ) : (
                                 <Select onValueChange={handleAssignmentChange} value={selectedAssignment} disabled={loading || !selectedLesson}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={assignments.length === 0 ? "请先选择课时" : "请选择作业"} />
+                                        <SelectValue placeholder={!selectedLesson ? "请先选择课时" : "所有作业"} />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        {selectedLesson && <SelectItem value="all">所有作业</SelectItem>}
                                         {assignments.map((assignment) => (
                                             <SelectItem key={assignment.id} value={assignment.id.toString()}>
                                                 {assignment.name}
@@ -287,7 +411,7 @@ export default function SubmissionShow() {
                 </div>
 
                 {/* 提交记录列表 */}
-                {selectedAssignment && (
+                {selectedYear && selectedLesson && (
                     <Card>
                         <CardHeader>
                             <CardTitle>提交记录 ({submissions.length})</CardTitle>
@@ -352,6 +476,13 @@ export default function SubmissionShow() {
                                                             onClick={() => handleDownload(submission.file_path)}
                                                         >
                                                             下载
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteClick(submission)}
+                                                        >
+                                                            删除
                                                         </Button>
                                                     </div>
                                                 </TableCell>
@@ -549,6 +680,32 @@ export default function SubmissionShow() {
                                 </div>
                             </>
                         )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* 删除确认模态框 */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>确认删除</DialogTitle>
+                        <DialogDescription>
+                            确定要删除以下提交记录吗？此操作不可恢复。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 p-3 bg-muted rounded-md">
+                        <p className="text-sm font-medium">文件名：{submissionToDelete?.file_name}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            学生：{submissionToDelete?.student.name}
+                        </p>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={handleDeleteCancel} disabled={isDeleting}>
+                            取消
+                        </Button>
+                        <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
+                            {isDeleting ? '删除中...' : '确认删除'}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

@@ -248,4 +248,25 @@ class SubmissionController extends Controller
             'score' => null,
         ]);
     }
+
+    public function destroy(string $id): \Illuminate\Http\JsonResponse
+    {
+        $submission = Submission::findOrFail($id);
+
+        // 删除文件
+        Storage::disk('public')->delete($submission->file_path);
+
+        // 删除预览图（如果存在）
+        if ($submission->preview_image_path) {
+            Storage::disk('public')->delete($submission->preview_image_path);
+        }
+
+        // 删除数据库记录
+        $submission->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => '删除成功',
+        ]);
+    }
 }
