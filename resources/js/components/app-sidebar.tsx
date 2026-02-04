@@ -52,6 +52,11 @@ const mainNavItems: NavItem[] = [
         href: '/submissions/show',
         icon: Eye,
     },
+    {
+        title: '作品广场',
+        href: '/submissions/gallery',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

@@ -25,6 +25,7 @@ Route::post('api/upload/move-lesson-images', [\App\Http\Controllers\UploadContro
 
 Route::get('submissions', [\App\Http\Controllers\SubmissionController::class, 'index'])->name('submissions.index');
 Route::get('submissions/show', [\App\Http\Controllers\SubmissionController::class, 'show'])->name('submissions.show');
+Route::get('submissions/gallery', [\App\Http\Controllers\SubmissionController::class, 'gallery'])->name('submissions.gallery');
 Route::post('submissions', [\App\Http\Controllers\SubmissionController::class, 'store'])->name('submissions.store');
 
 // API routes for submissions
@@ -32,6 +33,7 @@ Route::get('api/submissions/students-by-year', [\App\Http\Controllers\Submission
 Route::get('api/submissions/lessons-by-year', [\App\Http\Controllers\SubmissionController::class, 'getLessonsByYear']);
 Route::get('api/submissions/assignments-by-lesson', [\App\Http\Controllers\SubmissionController::class, 'getAssignmentsByLesson']);
 Route::get('api/submissions/submissions-by-assignment', [\App\Http\Controllers\SubmissionController::class, 'getSubmissionsByAssignment']);
+Route::get('api/submissions/all', [\App\Http\Controllers\SubmissionController::class, 'getAllSubmissions']);
 Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore']);
 Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore']);
 

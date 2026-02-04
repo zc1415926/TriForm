@@ -39,6 +39,39 @@ class SubmissionController extends Controller
         ]);
     }
 
+    public function gallery(): \Inertia\Response
+    {
+        return Inertia::render('submissions/gallery');
+    }
+
+    public function getAllSubmissions(): \Illuminate\Http\JsonResponse
+    {
+        $submissions = Submission::with([
+            'student:id,name,year',
+            'assignment:id,name',
+            'assignment.lesson:id,name',
+        ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($submissions->map(function ($submission) {
+            return [
+                'id' => $submission->id,
+                'student_id' => $submission->student_id,
+                'assignment_id' => $submission->assignment_id,
+                'file_path' => $submission->file_path,
+                'file_name' => $submission->file_name,
+                'file_size' => $submission->file_size,
+                'preview_image_path' => $submission->preview_image_path,
+                'status' => $submission->status,
+                'score' => $submission->score,
+                'created_at' => $submission->created_at,
+                'student' => $submission->student,
+                'assignment' => $submission->assignment,
+            ];
+        }));
+    }
+
     public function getStudentsByYear(Request $request): \Illuminate\Http\JsonResponse
     {
         $year = $request->query('year');
