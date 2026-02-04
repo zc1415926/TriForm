@@ -506,6 +506,46 @@ export default function SubmissionShow() {
                                     >
                                         取消打分
                                     </Button>
+
+                                    {/* 上一个/下一个按钮 */}
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!modelPreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === modelPreviewData.submission!.id);
+                                                if (currentIndex > 0) {
+                                                    const prevSubmission = submissions[currentIndex - 1];
+                                                    setModelPreviewData({
+                                                        fileUrl: `/storage/${prevSubmission.file_path}`,
+                                                        fileName: prevSubmission.file_name,
+                                                        submission: prevSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !modelPreviewData.submission || submissions.findIndex(s => s.id === modelPreviewData.submission.id) === 0}
+                                        >
+                                            上一个
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!modelPreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === modelPreviewData.submission!.id);
+                                                if (currentIndex < submissions.length - 1) {
+                                                    const nextSubmission = submissions[currentIndex + 1];
+                                                    setModelPreviewData({
+                                                        fileUrl: `/storage/${nextSubmission.file_path}`,
+                                                        fileName: nextSubmission.file_name,
+                                                        submission: nextSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !modelPreviewData.submission || submissions.findIndex(s => s.id === modelPreviewData.submission.id) === submissions.length - 1}
+                                        >
+                                            下一个
+                                        </Button>
+                                    </div>
                                 </div>
                             </>
                         )}
