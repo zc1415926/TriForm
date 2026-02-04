@@ -295,9 +295,8 @@ export function StlPreviewGenerator({ file, onPreviewGenerated }: StlPreviewGene
                 ref={canvasRef}
                 style={{
                     display: status === 'completed' ? 'none' : 'block',
-                    width: '100%',
-                    maxWidth: '400px',
-                    height: '250px',
+                    width: '400px',
+                    height: '300px',
                 }}
                 className="rounded-lg border bg-gray-50"
             />

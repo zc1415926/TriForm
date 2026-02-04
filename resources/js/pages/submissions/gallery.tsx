@@ -17,6 +17,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { StlModelViewer } from '@/components/stl-model-viewer';
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';
@@ -134,6 +135,42 @@ export default function SubmissionGallery() {
         }
     };
 
+    // 获取显示的图片路径
+    const getDisplayImagePath = (submission: Submission): string | null => {
+        // 如果有缩略图，使用缩略图
+        if (submission.preview_image_path) {
+            return `/storage/${submission.preview_image_path}`;
+        }
+        
+        // 如果是图片类型且没有缩略图，使用原图
+        const fileType = getFileType(submission.file_name);
+        if (fileType === 'image') {
+            return `/storage/${submission.file_path}`;
+        }
+        
+        return null;
+    };
+
+    // 图片预览框的显示样式
+    const getImagePreviewStyle = () => {
+        if (!imagePreviewUrl) return {};
+        
+        const img = new Image();
+        img.src = imagePreviewUrl;
+        
+        // 获取窗口尺寸
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        // 图片加载完成后计算
+        return {
+            maxWidth: windowWidth * 0.8 + 'px',
+            maxHeight: windowHeight * 0.8 + 'px',
+            width: 'auto',
+            height: 'auto',
+        };
+    };
+
     const getScoreBadge = (score: number | null) => {
         if (score === null) {
             return <span className="text-muted-foreground text-sm">未评分</span>;
@@ -185,9 +222,9 @@ export default function SubmissionGallery() {
                                     className="relative aspect-[4/3] bg-muted"
                                     onClick={(e) => handleImageClick(e, submission)}
                                 >
-                                    {submission.preview_image_path ? (
+                                    {getDisplayImagePath(submission) ? (
                                         <img
-                                            src={`/storage/${submission.preview_image_path}`}
+                                            src={getDisplayImagePath(submission)!}
                                             alt={submission.file_name}
                                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
                                         />
@@ -239,18 +276,26 @@ export default function SubmissionGallery() {
 
             {/* 图片预览模态框 */}
             <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
-                <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle>图片预览</DialogTitle>
-                        <DialogDescription className="sr-only">
-                            点击图片查看大图
-                        </DialogDescription>
-                    </DialogHeader>
-                    <img
-                        src={imagePreviewUrl}
-                        alt="预览图"
-                        className="max-w-full rounded-lg border"
-                    />
+                <DialogContent className="w-fit !max-w-[95vw] !max-h-[90vh] overflow-hidden p-0">
+                    <VisuallyHidden>
+                        <DialogHeader>
+                            <DialogTitle>图片预览</DialogTitle>
+                            <DialogDescription>点击图片查看大图</DialogDescription>
+                        </DialogHeader>
+                    </VisuallyHidden>
+                    <div className="flex flex-col items-center justify-center min-h-[50vh] bg-black/5 p-6">
+                        <img
+                            src={imagePreviewUrl}
+                            alt="预览图"
+                            className="max-w-[95vw] max-h-[80vh] object-contain rounded-lg shadow-lg"
+                            style={{
+                                maxWidth: '95vw',
+                                maxHeight: '80vh',
+                                width: 'auto',
+                                height: 'auto',
+                            }}
+                        />
+                    </div>
                 </DialogContent>
             </Dialog>
 

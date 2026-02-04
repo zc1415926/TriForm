@@ -185,14 +185,69 @@ export default function SubmissionIndex() {
     };
 
     // 处理文件选择
-    const handleFileChange = (index: number, file: File | null) => {
+    const handleFileChange = async (index: number, file: File | null) => {
         console.log('[SubmissionIndex] handleFileChange called, index:', index, 'file:', file?.name);
         const updatedAssignments = [...data.assignments];
+        const assignment = assignments.find(a => a.id.toString() === updatedAssignments[index].assignment_id);
+        
         updatedAssignments[index] = {
             ...updatedAssignments[index],
             file,
             preview_image: undefined,
         };
+
+        // 如果是图片类型且图片超过400x300，生成缩略图
+        if (file && assignment) {
+            const extension = file.name.split('.').pop()?.toLowerCase() || '';
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+            
+            if (imageExtensions.includes(extension)) {
+                try {
+                    const imageBitmap = await createImageBitmap(file);
+                    const width = imageBitmap.width;
+                    const height = imageBitmap.height;
+
+                    // 如果图片超过 400x300，按比例缩放
+                    if (width > 400 || height > 300) {
+                        const thumbnailWidth = 400;
+                        const thumbnailHeight = 300;
+                        const ratio = Math.min(thumbnailWidth / width, thumbnailHeight / height);
+                        const newWidth = Math.round(width * ratio);
+                        const newHeight = Math.round(height * ratio);
+
+                        // 创建 Canvas 生成缩略图
+                        const canvas = document.createElement('canvas');
+                        canvas.width = newWidth;
+                        canvas.height = newHeight;
+                        const ctx = canvas.getContext('2d');
+                        
+                        if (ctx) {
+                            ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
+                            
+                            // 转换为 Blob
+                            canvas.toBlob((blob) => {
+                                if (blob) {
+                                    const baseName = file.name.replace(/\.[^/.]+$/, '');
+                                    const thumbnailFile = new File([blob], `${baseName}_thumbnail.jpg`, {
+                                        type: 'image/jpeg',
+                                    });
+                                    updatedAssignments[index] = {
+                                        ...updatedAssignments[index],
+                                        preview_image: thumbnailFile,
+                                    };
+                                    setData('assignments', updatedAssignments);
+                                }
+                            }, 'image/jpeg', 0.85);
+                        }
+                    }
+                    
+                    imageBitmap.close();
+                } catch (error) {
+                    console.error('生成图片缩略图失败:', error);
+                }
+            }
+        }
+
         setData('assignments', updatedAssignments);
         console.log('[SubmissionIndex] setData assignments 完成');
     };

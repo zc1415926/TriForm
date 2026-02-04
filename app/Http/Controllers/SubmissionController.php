@@ -156,9 +156,85 @@ class SubmissionController extends Controller
             $filePath = $file->store($storagePath, 'public');
             $previewImagePath = null;
 
-            // 存储预览图（如果存在）
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+
+            // 如果前端已经生成了缩略图（图片或3D模型），直接使用
             if ($previewImage) {
                 $previewImagePath = $previewImage->store($storagePath, 'public');
+            }
+            // 如果是图片类型且前端没有生成缩略图，后端自动生成
+            elseif (in_array($extension, $imageExtensions)) {
+                // 使用 GD 库生成缩略图
+                $imageInfo = getimagesize($file->getPathname());
+                if ($imageInfo) {
+                    [$width, $height] = $imageInfo;
+
+                    // 如果图片超过 400x300，按比例缩放
+                    if ($width > 400 || $height > 300) {
+                        $thumbnailWidth = 400;
+                        $thumbnailHeight = 300;
+
+                        // 计算缩放比例
+                        $ratio = min($thumbnailWidth / $width, $thumbnailHeight / $height);
+                        $newWidth = (int) ($width * $ratio);
+                        $newHeight = (int) ($height * $ratio);
+
+                        // 创建缩略图
+                        $thumbnail = imagecreatetruecolor($newWidth, $newHeight);
+
+                        // 根据图片类型创建源图片
+                        $source = null;
+                        switch ($imageInfo[2]) {
+                            case IMAGETYPE_JPEG:
+                                $source = imagecreatefromjpeg($file->getPathname());
+                                break;
+                            case IMAGETYPE_PNG:
+                                $source = imagecreatefrompng($file->getPathname());
+                                // 保持 PNG 透明度
+                                imagealphablending($thumbnail, false);
+                                imagesavealpha($thumbnail, true);
+                                $transparent = imagecolorallocatealpha($thumbnail, 255, 255, 255, 127);
+                                imagefilledrectangle($thumbnail, 0, 0, $newWidth, $newHeight, $transparent);
+                                break;
+                            case IMAGETYPE_GIF:
+                                $source = imagecreatefromgif($file->getPathname());
+                                break;
+                            case IMAGETYPE_WEBP:
+                                $source = imagecreatefromwebp($file->getPathname());
+                                break;
+                            case IMAGETYPE_BMP:
+                                $source = imagecreatefrombmp($file->getPathname());
+                                break;
+                        }
+
+                        if ($source) {
+                            // 缩放图片
+                            imagecopyresampled($thumbnail, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+                            // 保存缩略图到临时文件
+                            $thumbnailPath = tempnam(sys_get_temp_dir(), 'thumbnail_');
+                            imagejpeg($thumbnail, $thumbnailPath, 85);
+
+                            // 存储缩略图
+                            $thumbnailFile = new \Illuminate\Http\UploadedFile(
+                                $thumbnailPath,
+                                $file->getClientOriginalName(),
+                                'image/jpeg',
+                                null,
+                                true
+                            );
+                            $previewImagePath = $thumbnailFile->store($storagePath, 'public');
+
+                            // 清理
+                            imagedestroy($thumbnail);
+                            imagedestroy($source);
+                            unlink($thumbnailPath);
+                        }
+                    } else {
+                        // 图片小于等于 400x300，使用原图作为缩略图
+                        $previewImagePath = $filePath;
+                    }
+                }
             }
 
             // 检查是否已提交
