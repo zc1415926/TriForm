@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import React, { useState } from 'react';
+import { StlModelViewer } from '@/components/stl-model-viewer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +33,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { StlModelViewer } from '@/components/stl-model-viewer';
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
@@ -78,6 +78,7 @@ interface Submission {
     file_size: number;
     preview_image_path: string | null;
     status: string;
+    score: number | null;
     created_at: string;
     student: Student;
     assignment: Assignment;
@@ -106,6 +107,7 @@ export default function SubmissionShow() {
     const [modelPreviewData, setModelPreviewData] = useState<{
         fileUrl: string;
         fileName: string;
+        submission: Submission | null;
     } | null>(null);
 
     // 格式化文件大小
@@ -189,10 +191,11 @@ export default function SubmissionShow() {
     };
 
     // 查看3D模型
-    const handleViewModel = (filePath: string, fileName: string) => {
+    const handleViewModel = (filePath: string, fileName: string, submission: Submission) => {
         setModelPreviewData({
             fileUrl: `/storage/${filePath}`,
             fileName,
+            submission,
         });
         setModelPreviewOpen(true);
     };
@@ -301,6 +304,7 @@ export default function SubmissionShow() {
                                             <TableHead>文件大小</TableHead>
                                             <TableHead>提交时间</TableHead>
                                             <TableHead>状态</TableHead>
+                                            <TableHead>分数</TableHead>
                                             <TableHead>操作</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -312,6 +316,15 @@ export default function SubmissionShow() {
                                                 <TableCell>{formatFileSize(submission.file_size)}</TableCell>
                                                 <TableCell>{formatDate(submission.created_at)}</TableCell>
                                                 <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                                                <TableCell>
+                                                    {submission.score !== null ? (
+                                                        <Badge variant="default" className="bg-blue-600">
+                                                            {submission.score} 分
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-sm">未评分</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell>
                                                     <div className="flex gap-2">
                                                         {submission.preview_image_path && (
@@ -328,7 +341,7 @@ export default function SubmissionShow() {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => handleViewModel(submission.file_path, submission.file_name)}
+                                                                onClick={() => handleViewModel(submission.file_path, submission.file_name, submission)}
                                                             >
                                                                 查看
                                                             </Button>
@@ -372,22 +385,129 @@ export default function SubmissionShow() {
 
             {/* 3D模型预览模态框 */}
             <Dialog open={modelPreviewOpen} onOpenChange={setModelPreviewOpen}>
-                <DialogContent className="max-w-5xl h-[600px]">
+                <DialogContent className="w-fit !max-w-[95vw] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>3D模型预览 - {modelPreviewData?.fileName}</DialogTitle>
                         <DialogDescription className="sr-only">
                             使用鼠标左键旋转，右键平移，滚轮缩放
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex-1 h-[500px]">
+                    <div className="flex flex-col lg:flex-row gap-6 min-h-[500px]">
                         {modelPreviewData && (
-                            <StlModelViewer
-                                fileUrl={modelPreviewData.fileUrl}
-                                fileName={modelPreviewData.fileName}
-                                onError={(error) => {
-                                    console.error('3D模型加载失败:', error);
-                                }}
-                            />
+                            <>
+                                {/* 左侧：3D 预览窗口 (4:3 比例，缩小 1/3) */}
+                                <div className="flex-[2/3] min-h-[400px] lg:min-h-[500px] aspect-[4/3]">
+                                    <StlModelViewer
+                                        fileUrl={modelPreviewData.fileUrl}
+                                        fileName={modelPreviewData.fileName}
+                                        onError={(error) => {
+                                            console.error('3D模型加载失败:', error);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* 右侧：打分组件 */}
+                                <div className="w-full lg:w-80 flex-shrink-0 border-l lg:pl-6 space-y-6">
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-2">学生信息</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {modelPreviewData.submission?.student.name}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">当前分数</Label>
+                                        <div className="text-3xl font-bold">
+                                            {modelPreviewData.submission?.score !== null && modelPreviewData.submission ? (
+                                                <span className="text-blue-600">{modelPreviewData.submission.score} 分</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">未评分</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">选择分数</Label>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {[
+                                                { grade: 'G', score: 12, label: 'G (12分)' },
+                                                { grade: 'A', score: 10, label: 'A (10分)' },
+                                                { grade: 'B', score: 8, label: 'B (8分)' },
+                                                { grade: 'C', score: 6, label: 'C (6分)' },
+                                                { grade: 'O', score: 0, label: 'O (0分)' },
+                                            ].map(({ grade, score, label }) => (
+                                                <Button
+                                                    key={grade}
+                                                    variant={modelPreviewData.submission && modelPreviewData.submission.score === score ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        if (!modelPreviewData.submission) return;
+                                                        try {
+                                                            await axios.post('/api/submissions/score', {
+                                                                submission_id: modelPreviewData.submission.id,
+                                                                grade,
+                                                            });
+                                                            // 更新本地状态
+                                                            const updatedSubmissions = submissions.map((s) =>
+                                                                s.id === modelPreviewData.submission!.id
+                                                                    ? { ...s, score }
+                                                                    : s
+                                                            );
+                                                            setSubmissions(updatedSubmissions);
+                                                            // 更新模态框中的数据
+                                                            setModelPreviewData({
+                                                                ...modelPreviewData,
+                                                                submission: {
+                                                                    ...modelPreviewData.submission,
+                                                                    score,
+                                                                },
+                                                            });
+                                                        } catch (error) {
+                                                            console.error('打分失败:', error);
+                                                        }
+                                                    }}
+                                                    disabled={loading}
+                                                    title={label}
+                                                >
+                                                    {grade}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant="destructive"
+                                        onClick={async () => {
+                                            if (!modelPreviewData.submission) return;
+                                            try {
+                                                await axios.post('/api/submissions/cancel-score', {
+                                                    submission_id: modelPreviewData.submission.id,
+                                                });
+                                                // 更新本地状态
+                                                const updatedSubmissions = submissions.map((s) =>
+                                                    s.id === modelPreviewData.submission!.id
+                                                        ? { ...s, score: null }
+                                                        : s
+                                                );
+                                                setSubmissions(updatedSubmissions);
+                                                // 更新模态框中的数据
+                                                setModelPreviewData({
+                                                    ...modelPreviewData,
+                                                    submission: {
+                                                        ...modelPreviewData.submission,
+                                                        score: null,
+                                                    },
+                                                });
+                                            } catch (error) {
+                                                console.error('取消打分失败:', error);
+                                            }
+                                        }}
+                                        disabled={loading || modelPreviewData.submission?.score === null}
+                                    >
+                                        取消打分
+                                    </Button>
+                                </div>
+                            </>
                         )}
                     </div>
                 </DialogContent>

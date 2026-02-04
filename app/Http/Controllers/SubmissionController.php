@@ -166,4 +166,53 @@ class SubmissionController extends Controller
 
         return redirect()->back()->with('success', '作品提交成功');
     }
+
+    public function updateScore(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'submission_id' => 'required|exists:submissions,id',
+            'grade' => 'required|in:G,A,B,C,O',
+        ]);
+
+        $submission = Submission::findOrFail($validated['submission_id']);
+
+        // 等级转分数映射
+        $gradeScores = [
+            'G' => 12,
+            'A' => 10,
+            'B' => 8,
+            'C' => 6,
+            'O' => 0,
+        ];
+
+        $score = $gradeScores[$validated['grade']];
+
+        $submission->update([
+            'score' => $score,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'score' => $score,
+            'grade' => $validated['grade'],
+        ]);
+    }
+
+    public function cancelScore(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'submission_id' => 'required|exists:submissions,id',
+        ]);
+
+        $submission = Submission::findOrFail($validated['submission_id']);
+
+        $submission->update([
+            'score' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'score' => null,
+        ]);
+    }
 }

@@ -32,5 +32,7 @@ Route::get('api/submissions/students-by-year', [\App\Http\Controllers\Submission
 Route::get('api/submissions/lessons-by-year', [\App\Http\Controllers\SubmissionController::class, 'getLessonsByYear']);
 Route::get('api/submissions/assignments-by-lesson', [\App\Http\Controllers\SubmissionController::class, 'getAssignmentsByLesson']);
 Route::get('api/submissions/submissions-by-assignment', [\App\Http\Controllers\SubmissionController::class, 'getSubmissionsByAssignment']);
+Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore']);
+Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore']);
 
 require __DIR__.'/settings.php';
