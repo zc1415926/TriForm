@@ -110,6 +110,14 @@ export default function SubmissionShow() {
         submission: Submission | null;
     } | null>(null);
 
+    // 图片预览模态框状态
+    const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+    const [imagePreviewData, setImagePreviewData] = useState<{
+        fileUrl: string;
+        fileName: string;
+        submission: Submission | null;
+    } | null>(null);
+
     // 删除确认模态框状态
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [submissionToDelete, setSubmissionToDelete] = useState<Submission | null>(null);
@@ -290,6 +298,16 @@ export default function SubmissionShow() {
         setModelPreviewOpen(true);
     };
 
+    // 查看图片
+    const handleViewImage = (filePath: string, fileName: string, submission: Submission) => {
+        setImagePreviewData({
+            fileUrl: `/storage/${filePath}`,
+            fileName,
+            submission,
+        });
+        setImagePreviewOpen(true);
+    };
+
     // 获取状态徽章样式
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -466,6 +484,16 @@ export default function SubmissionShow() {
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => handleViewModel(submission.file_path, submission.file_name, submission)}
+                                                            >
+                                                                查看
+                                                            </Button>
+                                                        )}
+                                                        {/* 图片文件显示查看按钮 */}
+                                                        {['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleViewImage(submission.file_path, submission.file_name, submission)}
                                                             >
                                                                 查看
                                                             </Button>
@@ -673,6 +701,173 @@ export default function SubmissionShow() {
                                                 }
                                             }}
                                             disabled={loading || !modelPreviewData.submission || submissions.findIndex(s => s.id === modelPreviewData.submission.id) === submissions.length - 1}
+                                        >
+                                            下一个
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* 图片预览模态框 */}
+            <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
+                <DialogContent className="w-fit !max-w-[95vw] !max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>图片预览 - {imagePreviewData?.fileName}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            点击图片查看大图
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        {imagePreviewData && (
+                            <>
+                                {/* 左侧：图片预览窗口 */}
+                                <div className="flex-[2/3] min-h-[400px] flex items-center justify-center bg-black/5 rounded-lg">
+                                    <img
+                                        src={imagePreviewData.fileUrl}
+                                        alt={imagePreviewData.fileName}
+                                        className="max-w-[47.5vw] max-h-[40vh] object-contain rounded-lg shadow-lg"
+                                    />
+                                </div>
+                                {/* 右侧：打分面板 */}
+                                <div className="w-full lg:w-80 flex-shrink-0 border-l lg:pl-6 space-y-6">
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-2">学生信息</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {imagePreviewData.submission?.student.name}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">当前分数</Label>
+                                        <div className="text-3xl font-bold">
+                                            {imagePreviewData.submission?.score !== null && imagePreviewData.submission ? (
+                                                <span className="text-blue-600">{imagePreviewData.submission.score} 分</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">未评分</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">选择分数</Label>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {[
+                                                { grade: 'G', score: 12, label: 'G (12分)' },
+                                                { grade: 'A', score: 10, label: 'A (10分)' },
+                                                { grade: 'B', score: 8, label: 'B (8分)' },
+                                                { grade: 'C', score: 6, label: 'C (6分)' },
+                                                { grade: 'O', score: 0, label: 'O (0分)' },
+                                            ].map(({ grade, score, label }) => (
+                                                <Button
+                                                    key={grade}
+                                                    variant={imagePreviewData.submission && imagePreviewData.submission.score === score ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        if (!imagePreviewData.submission) return;
+                                                        try {
+                                                            await axios.post('/api/submissions/score', {
+                                                                submission_id: imagePreviewData.submission.id,
+                                                                grade,
+                                                            });
+                                                            // 更新本地状态
+                                                            const updatedSubmissions = submissions.map((s) =>
+                                                                s.id === imagePreviewData.submission!.id
+                                                                    ? { ...s, score }
+                                                                    : s
+                                                            );
+                                                            setSubmissions(updatedSubmissions);
+                                                            // 更新模态框中的数据
+                                                            setImagePreviewData({
+                                                                ...imagePreviewData,
+                                                                submission: {
+                                                                    ...imagePreviewData.submission,
+                                                                    score,
+                                                                },
+                                                            });
+                                                        } catch (error) {
+                                                            console.error('打分失败:', error);
+                                                        }
+                                                    }}
+                                                    disabled={loading}
+                                                    title={label}
+                                                >
+                                                    {grade}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant="destructive"
+                                        onClick={async () => {
+                                            if (!imagePreviewData.submission) return;
+                                            try {
+                                                await axios.post('/api/submissions/cancel-score', {
+                                                    submission_id: imagePreviewData.submission.id,
+                                                });
+                                                // 更新本地状态
+                                                const updatedSubmissions = submissions.map((s) =>
+                                                    s.id === imagePreviewData.submission!.id
+                                                        ? { ...s, score: null }
+                                                        : s
+                                                );
+                                                setSubmissions(updatedSubmissions);
+                                                // 更新模态框中的数据
+                                                setImagePreviewData({
+                                                    ...imagePreviewData,
+                                                    submission: {
+                                                        ...imagePreviewData.submission,
+                                                        score: null,
+                                                    },
+                                                });
+                                            } catch (error) {
+                                                console.error('取消打分失败:', error);
+                                            }
+                                        }}
+                                        disabled={loading || imagePreviewData.submission?.score === null}
+                                    >
+                                        取消打分
+                                    </Button>
+
+                                    {/* 上一个/下一个按钮 */}
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!imagePreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === imagePreviewData.submission!.id);
+                                                if (currentIndex > 0) {
+                                                    const prevSubmission = submissions[currentIndex - 1];
+                                                    setImagePreviewData({
+                                                        fileUrl: `/storage/${prevSubmission.file_path}`,
+                                                        fileName: prevSubmission.file_name,
+                                                        submission: prevSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !imagePreviewData.submission || submissions.findIndex(s => s.id === imagePreviewData.submission.id) === 0}
+                                        >
+                                            上一个
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!imagePreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === imagePreviewData.submission!.id);
+                                                if (currentIndex < submissions.length - 1) {
+                                                    const nextSubmission = submissions[currentIndex + 1];
+                                                    setImagePreviewData({
+                                                        fileUrl: `/storage/${nextSubmission.file_path}`,
+                                                        fileName: nextSubmission.file_name,
+                                                        submission: nextSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !imagePreviewData.submission || submissions.findIndex(s => s.id === imagePreviewData.submission.id) === submissions.length - 1}
                                         >
                                             下一个
                                         </Button>
