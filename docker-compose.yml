@@ -11,7 +11,11 @@ services:
       POSTGRES_PASSWORD: triform_password
     ports:
       - "5432:5432"
+      
     volumes:
+      # Docker 会在宿主机上创建一个专门的位置/var/lib/docker/volumes/triform_postgres_data/_data，
+      # 挂载到容器内的/var/lib/postgresql/data文件夹，
+      # 当 PostgreSQL在容器内写入数据时，实际上是在写入宿主机的那个目录。
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U triform"]
@@ -21,4 +25,6 @@ services:
 
 volumes:
   postgres_data:
+    # 这里有几个选项：local数据存储在宿主机本地，cloud支持云服务商的存储服务，
+    # nfs挂载远程NFS服务器，tmpfs数据存储在内存中
     driver: local
