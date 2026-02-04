@@ -48,7 +48,7 @@ class SubmissionController extends Controller
     {
         $submissions = Submission::with([
             'student:id,name,year',
-            'assignment:id,name',
+            'assignment:id,name,lesson_id',
             'assignment.lesson:id,name',
         ])
             ->orderBy('created_at', 'desc')
