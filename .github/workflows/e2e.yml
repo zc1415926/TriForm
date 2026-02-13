@@ -1,0 +1,94 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: triform_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: secret
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: pdo, pdo_pgsql
+        coverage: none
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install PHP dependencies
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+    - name: Install Node.js dependencies
+      run: npm ci
+
+    - name: Setup environment
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+        sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=pgsql/' .env
+        sed -i 's/# DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
+        sed -i 's/# DB_PORT=3306/DB_PORT=5432/' .env
+        sed -i 's/# DB_DATABASE=laravel/DB_DATABASE=triform_test/' .env
+        sed -i 's/# DB_USERNAME=root/DB_USERNAME=postgres/' .env
+        sed -i 's/# DB_PASSWORD=/DB_PASSWORD=secret/' .env
+        sed -i 's/APP_URL=http:\/\/localhost/APP_URL=http:\/\/localhost:8000/' .env
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
+    - name: Seed database
+      run: php artisan db:seed --force
+
+    - name: Build frontend assets
+      run: npm run build
+
+    - name: Install Playwright browsers
+      run: npx playwright install firefox
+
+    - name: Start Laravel server
+      run: php artisan serve --port=8000 &
+
+    - name: Wait for server
+      run: |
+        timeout 60 bash -c 'until curl -s http://localhost:8000 > /dev/null; do sleep 1; done'
+
+    - name: Run E2E tests
+      run: npm run e2e
+      env:
+        CI: true
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 30
