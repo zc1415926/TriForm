@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Mcp\Agents\IFlow;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Boost\Boost;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // Register custom iFlow CLI agent for Laravel Boost
+        Boost::registerAgent('iflow', IFlow::class);
     }
 
     protected function configureDefaults(): void
