@@ -8,12 +8,53 @@ use Inertia\Inertia;
 
 class StudentController extends Controller
 {
-    public function index(): \Inertia\Response
+    public function index(Request $request): \Inertia\Response
     {
-        $students = Student::latest()->get();
+        $selectedYear = $request->query('year');
+
+        // 获取所有可用年份（降序排列）
+        $years = Student::query()
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        // 如果没有指定年份且有年份可用，默认选择最新年份
+        if ($selectedYear === null && ! empty($years)) {
+            $selectedYear = $years[0];
+        }
+
+        // 构建查询
+        $query = Student::query()->with(['submissions' => function ($query): void {
+            $query->whereNotNull('score');
+        }]);
+
+        // 如果指定了年份且不是 'all'，则筛选
+        if ($selectedYear && $selectedYear !== 'all') {
+            $query->where('year', $selectedYear);
+        }
+
+        $students = $query->latest()->get()->map(function (Student $student): array {
+            $scores = $student->submissions->pluck('score')->filter();
+            $totalScore = $scores->sum();
+            $totalSubmissions = $student->submissions->count();
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'class' => $student->class,
+                'year' => $student->year,
+                'created_at' => $student->created_at,
+                'total_score' => $totalScore,
+                'total_submissions' => $totalSubmissions,
+            ];
+        });
 
         return Inertia::render('students/index', [
             'students' => $students,
+            'years' => $years,
+            'selectedYear' => $selectedYear === 'all' ? null : $selectedYear,
         ]);
     }
 

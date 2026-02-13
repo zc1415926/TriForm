@@ -1,6 +1,6 @@
 import { Head, router, usePage, useForm } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,10 +46,14 @@ interface Student {
     class: number;
     year: number;
     created_at: string;
+    total_score: number;
+    total_submissions: number;
 }
 
 type PageProps = {
     students: Student[];
+    years: number[];
+    selectedYear: number | null;
     success?: string;
 };
 
@@ -60,8 +64,77 @@ type StudentFormData = {
     year: string;
 };
 
+type SortField = 'name' | 'grade' | 'class' | 'year' | 'total_score' | 'total_submissions';
+type SortDirection = 'asc' | 'desc';
+
 export default function StudentIndex() {
-    const { students, success } = usePage<PageProps>().props;
+    const { students, years, selectedYear, success } = usePage<PageProps>().props;
+
+    // 年份筛选状态
+    const [filterYear, setFilterYear] = useState<number | 'all' | null>(
+        selectedYear || 'all'
+    );
+
+    // 排序状态
+    const [sortField, setSortField] = useState<SortField>('class');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+    // 排序后的学生列表
+    const sortedStudents = useMemo(() => {
+        return [...students].sort((a, b) => {
+            let aValue: string | number = a[sortField];
+            let bValue: string | number = b[sortField];
+
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = (bValue as string).toLowerCase();
+            }
+
+            if (sortDirection === 'asc') {
+                return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            } else {
+                return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+            }
+        });
+    }, [students, sortField, sortDirection]);
+
+    // 处理排序
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('desc');
+        }
+    };
+
+    // 排序图标
+    const SortIcon = ({ field }: { field: SortField }) => {
+        if (sortField !== field) {
+            return <ArrowUpDown className="ml-1 size-3 opacity-50" />;
+        }
+        return sortDirection === 'asc' 
+            ? <ArrowUp className="ml-1 size-3" />
+            : <ArrowDown className="ml-1 size-3" />;
+    };
+
+    // 处理年份筛选
+    const handleYearFilter = (value: string) => {
+        if (value === 'all') {
+            setFilterYear('all');
+            router.get(index().url, {}, { preserveState: true });
+        } else {
+            const year = parseInt(value);
+            setFilterYear(year);
+            router.get(index().url, { year }, { preserveState: true });
+        }
+    };
+
+    // 清除筛选
+    const clearFilter = () => {
+        setFilterYear('all');
+        router.get(index().url, {}, { preserveState: true });
+    };
 
     // 模态框状态
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -164,10 +237,42 @@ export default function StudentIndex() {
                         <h1 className="text-3xl font-bold">学生管理</h1>
                         <p className="text-muted-foreground">管理所有学生信息</p>
                     </div>
-                    <Button onClick={openCreateModal}>
-                        <Plus className="mr-2 size-4" />
-                        添加学生
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        {/* 年份筛选 */}
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={filterYear?.toString() || 'all'}
+                                onValueChange={handleYearFilter}
+                            >
+                                <SelectTrigger className="w-[140px]">
+                                    <Filter className="mr-2 size-4" />
+                                    <SelectValue placeholder="筛选年份" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">全部年份</SelectItem>
+                                    {years.map((year) => (
+                                        <SelectItem key={year} value={year.toString()}>
+                                            {year}年
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {filterYear !== 'all' && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearFilter}
+                                    title="清除筛选"
+                                >
+                                    <X className="size-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <Button onClick={openCreateModal}>
+                            <Plus className="mr-2 size-4" />
+                            添加学生
+                        </Button>
+                    </div>
                 </div>
 
                 {success && (
@@ -176,52 +281,92 @@ export default function StudentIndex() {
                     </div>
                 )}
 
-                <div className="rounded-md border">
+                <div className="rounded-lg border shadow-sm">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[100px]">ID</TableHead>
-                                <TableHead>姓名</TableHead>
-                                <TableHead>年级</TableHead>
-                                <TableHead>班级</TableHead>
-                                <TableHead>年份</TableHead>
-                                <TableHead>创建时间</TableHead>
-                                <TableHead className="text-right">
+                            <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                <TableHead className="font-semibold text-left">
+                                    <button
+                                        className="flex items-center"
+                                        onClick={() => handleSort('name')}
+                                    >
+                                        姓名
+                                        <SortIcon field="name" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-center">
+                                    <button
+                                        className="inline-flex items-center"
+                                        onClick={() => handleSort('grade')}
+                                    >
+                                        年级
+                                        <SortIcon field="grade" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-center">
+                                    <button
+                                        className="inline-flex items-center"
+                                        onClick={() => handleSort('class')}
+                                    >
+                                        班级
+                                        <SortIcon field="class" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-center">
+                                    <button
+                                        className="inline-flex items-center"
+                                        onClick={() => handleSort('year')}
+                                    >
+                                        年份
+                                        <SortIcon field="year" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-center">
+                                    <button
+                                        className="inline-flex items-center"
+                                        onClick={() => handleSort('total_score')}
+                                    >
+                                        总分
+                                        <SortIcon field="total_score" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-center">
+                                    <button
+                                        className="inline-flex items-center"
+                                        onClick={() => handleSort('total_submissions')}
+                                    >
+                                        作业数
+                                        <SortIcon field="total_submissions" />
+                                    </button>
+                                </TableHead>
+                                <TableHead className="font-semibold text-right">
                                     操作
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {students.map((student: Student) => (
-                                <TableRow key={student.id}>
-                                    <TableCell className="font-medium">
-                                        #{student.id}
-                                    </TableCell>
-                                    <TableCell>{student.name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary">
-                                            {gradeMap[student.grade] || '未知'}年级
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>{student.class}班</TableCell>
-                                    <TableCell>{student.year}年</TableCell>
-                                    <TableCell>
-                                        {new Date(student.created_at).toLocaleDateString(
-                                            'zh-CN',
-                                        )}
-                                    </TableCell>
+                            {sortedStudents.map((student: Student) => (
+                                <TableRow key={student.id} className="hover:bg-muted/30 transition-colors">
+                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell className="text-center">{gradeMap[student.grade] || '未知'}</TableCell>
+                                    <TableCell className="text-center">{student.class}</TableCell>
+                                    <TableCell className="text-center">{student.year}</TableCell>
+                                    <TableCell className="text-center font-semibold text-lg">{student.total_score}</TableCell>
+                                    <TableCell className="text-center text-muted-foreground">{student.total_submissions}</TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
+                                        <div className="flex justify-end gap-1">
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
+                                                className="h-8 w-8"
                                                 onClick={() => openEditModal(student)}
                                             >
                                                 <Pencil className="size-4" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => openDeleteModal(student.id)}
                                             >
                                                 <Trash2 className="size-4" />
@@ -234,7 +379,7 @@ export default function StudentIndex() {
                     </Table>
                 </div>
 
-                {students.length === 0 && (
+                {sortedStudents.length === 0 && (
                     <div className="rounded-lg border border-dashed p-12 text-center">
                         <p className="text-muted-foreground">
                             暂无学生数据，点击上方按钮添加第一个学生

@@ -29,13 +29,13 @@ Route::get('submissions/gallery', [\App\Http\Controllers\SubmissionController::c
 Route::post('submissions', [\App\Http\Controllers\SubmissionController::class, 'store'])->name('submissions.store');
 
 // API routes for submissions
-Route::get('api/submissions/students-by-year', [\App\Http\Controllers\SubmissionController::class, 'getStudentsByYear']);
-Route::get('api/submissions/lessons-by-year', [\App\Http\Controllers\SubmissionController::class, 'getLessonsByYear']);
-Route::get('api/submissions/assignments-by-lesson', [\App\Http\Controllers\SubmissionController::class, 'getAssignmentsByLesson']);
-Route::get('api/submissions/submissions-by-assignment', [\App\Http\Controllers\SubmissionController::class, 'getSubmissionsByAssignment']);
-Route::get('api/submissions/all', [\App\Http\Controllers\SubmissionController::class, 'getAllSubmissions']);
-Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore']);
-Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore']);
-Route::delete('api/submissions/{id}', [\App\Http\Controllers\SubmissionController::class, 'destroy']);
+Route::get('api/submissions/students-by-year', [\App\Http\Controllers\SubmissionController::class, 'getStudentsByYear'])->name('api.submissions.students-by-year');
+Route::get('api/submissions/lessons-by-year', [\App\Http\Controllers\SubmissionController::class, 'getLessonsByYear'])->name('api.submissions.lessons-by-year');
+Route::get('api/submissions/assignments-by-lesson', [\App\Http\Controllers\SubmissionController::class, 'getAssignmentsByLesson'])->name('api.submissions.assignments-by-lesson');
+Route::get('api/submissions/submissions-by-assignment', [\App\Http\Controllers\SubmissionController::class, 'getSubmissionsByAssignment'])->name('api.submissions.submissions-by-assignment');
+Route::get('api/submissions/all', [\App\Http\Controllers\SubmissionController::class, 'getAllSubmissions'])->name('api.submissions.all');
+Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore'])->name('api.submissions.score');
+Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore'])->name('api.submissions.cancel-score');
+Route::delete('api/submissions/{id}', [\App\Http\Controllers\SubmissionController::class, 'destroy'])->name('api.submissions.destroy');
 
 require __DIR__.'/settings.php';
