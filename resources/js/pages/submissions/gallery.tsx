@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { StlModelViewer } from '@/components/stl-model-viewer';
+import { VoxModelViewer } from '@/components/vox-model-viewer';
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
@@ -98,6 +99,13 @@ export default function SubmissionGallery() {
     // 3D模型预览模态框状态
     const [modelPreviewOpen, setModelPreviewOpen] = useState(false);
     const [modelPreviewData, setModelPreviewData] = useState<{
+        fileUrl: string;
+        fileName: string;
+    } | null>(null);
+
+    // VOX模型预览模态框状态
+    const [voxPreviewOpen, setVoxPreviewOpen] = useState(false);
+    const [voxPreviewData, setVoxPreviewData] = useState<{
         fileUrl: string;
         fileName: string;
     } | null>(null);
@@ -223,7 +231,7 @@ export default function SubmissionGallery() {
     
 
     // 判断文件类型
-    const getFileType = (fileName: string): 'image' | 'model' | 'other' => {
+    const getFileType = (fileName: string): 'image' | 'model' | 'vox' | 'other' => {
         const ext = fileName.split('.').pop()?.toLowerCase() || '';
         const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
         const modelExtensions = ['stl', 'obj'];
@@ -233,6 +241,9 @@ export default function SubmissionGallery() {
         }
         if (modelExtensions.includes(ext)) {
             return 'model';
+        }
+        if (ext === 'vox') {
+            return 'vox';
         }
         return 'other';
     };
@@ -254,6 +265,13 @@ export default function SubmissionGallery() {
                 fileName: submission.file_name,
             });
             setModelPreviewOpen(true);
+        } else if (fileType === 'vox') {
+            // 打开VOX模型预览模态框
+            setVoxPreviewData({
+                fileUrl: `/storage/${submission.file_path}`,
+                fileName: submission.file_name,
+            });
+            setVoxPreviewOpen(true);
         } else {
             // 其他文件类型，直接下载或查看详情
             window.open(`/storage/${submission.file_path}`, '_blank');
@@ -476,7 +494,8 @@ export default function SubmissionGallery() {
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <span className="text-white text-sm font-medium">
                                             {getFileType(submission.file_name) === 'image' ? '查看大图' :
-                                             getFileType(submission.file_name) === 'model' ? '3D预览' : '打开文件'}
+                                             getFileType(submission.file_name) === 'model' ? '3D预览' :
+                                             getFileType(submission.file_name) === 'vox' ? 'VOX预览' : '打开文件'}
                                         </span>
                                     </div>
                                 </div>
@@ -583,7 +602,8 @@ export default function SubmissionGallery() {
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <span className="text-white text-sm font-medium">
                                             {getFileType(submission.file_name) === 'image' ? '查看大图' :
-                                             getFileType(submission.file_name) === 'model' ? '3D预览' : '打开文件'}
+                                             getFileType(submission.file_name) === 'model' ? '3D预览' :
+                                             getFileType(submission.file_name) === 'vox' ? 'VOX预览' : '打开文件'}
                                         </span>
                                     </div>
                                 </div>
@@ -675,6 +695,31 @@ export default function SubmissionGallery() {
                                     fileName={modelPreviewData.fileName}
                                     onError={(error) => {
                                         console.error('3D模型加载失败:', error);
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* VOX模型预览模态框 */}
+            <Dialog open={voxPreviewOpen} onOpenChange={setVoxPreviewOpen}>
+                <DialogContent className="w-fit !max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>VOX模型预览 - {voxPreviewData?.fileName}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            使用鼠标左键旋转，右键平移，滚轮缩放
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-center min-h-[500px]">
+                        {voxPreviewData && (
+                            <div className="aspect-[4/3] min-h-[400px] lg:min-h-[500px] w-[800px]">
+                                <VoxModelViewer
+                                    fileUrl={voxPreviewData.fileUrl}
+                                    fileName={voxPreviewData.fileName}
+                                    onError={(error) => {
+                                        console.error('VOX模型加载失败:', error);
                                     }}
                                 />
                             </div>

@@ -68,7 +68,7 @@ class DatabaseSeeder extends Seeder
             ['name' => '3D模型文件'],
             [
                 'description' => '允许上传的3D模型格式',
-                'extensions' => ['stl', 'obj', 'fbx', 'gltf', 'glb'],
+                'extensions' => ['stl', 'obj', 'fbx', 'gltf', 'glb', 'vox'],
                 'max_size' => 104857600,
             ]
         );

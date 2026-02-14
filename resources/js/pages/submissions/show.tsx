@@ -1,7 +1,8 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StlModelViewer } from '@/components/stl-model-viewer';
+import { VoxModelViewer, type VoxModelViewerRef } from '@/components/vox-model-viewer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -109,6 +110,16 @@ export default function SubmissionShow() {
         fileName: string;
         submission: Submission | null;
     } | null>(null);
+
+    // VOX模型预览模态框状态
+    const [voxPreviewOpen, setVoxPreviewOpen] = useState(false);
+    const [voxPreviewData, setVoxPreviewData] = useState<{
+        fileUrl: string;
+        fileName: string;
+        submission: Submission | null;
+    } | null>(null);
+    const voxViewerRef = useRef<VoxModelViewerRef>(null);
+    const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
 
     // 图片预览模态框状态
     const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
@@ -303,6 +314,53 @@ export default function SubmissionShow() {
         setModelPreviewOpen(true);
     };
 
+    // 查看VOX模型
+    const handleViewVox = (filePath: string, fileName: string, submission: Submission) => {
+        setVoxPreviewData({
+            fileUrl: `/storage/${filePath}`,
+            fileName,
+            submission,
+        });
+        setVoxPreviewOpen(true);
+    };
+
+    // 捕获VOX模型截图并上传
+    const handleCaptureVoxScreenshot = async () => {
+        if (!voxViewerRef.current || !voxPreviewData?.submission) return;
+
+        try {
+            setIsCapturingScreenshot(true);
+            const screenshot = await voxViewerRef.current.captureScreenshot();
+
+            if (!screenshot) {
+                throw new Error('截图失败');
+            }
+
+            // 上传到服务器
+            const response = await axios.post(`/api/submissions/${voxPreviewData.submission.id}/preview`, {
+                preview_image: screenshot,
+            });
+
+            if (response.data.success) {
+                // 更新本地状态
+                setVoxPreviewData(prev => prev ? {
+                    ...prev,
+                    submission: prev.submission ? {
+                        ...prev.submission,
+                        preview_image_path: response.data.preview_image_path,
+                    } : null,
+                } : null);
+                router.reload({ only: ['submissions'] });
+                alert('预览图生成成功！');
+            }
+        } catch (error) {
+            console.error('截图上传失败:', error);
+            alert('截图上传失败，请重试');
+        } finally {
+            setIsCapturingScreenshot(false);
+        }
+    };
+
     // 查看图片
     const handleViewImage = (filePath: string, fileName: string, submission: Submission) => {
         setImagePreviewData({
@@ -358,6 +416,37 @@ export default function SubmissionShow() {
     const handleDeleteCancel = () => {
         setDeleteDialogOpen(false);
         setSubmissionToDelete(null);
+    };
+
+    // 打分处理
+    const handleScore = async (grade: 'G' | 'A' | 'B' | 'C' | 'O', submissionId: number, studentName: string, score: number) => {
+        try {
+            setLoading(true);
+            await axios.post('/api/submissions/score', {
+                submission_id: submissionId,
+                grade,
+            });
+            // 更新本地状态
+            const updatedSubmissions = submissions.map((s) =>
+                s.id === submissionId ? { ...s, score } : s
+            );
+            setSubmissions(updatedSubmissions);
+            // 更新模态框中的数据
+            if (voxPreviewData?.submission?.id === submissionId) {
+                setVoxPreviewData({
+                    ...voxPreviewData,
+                    submission: {
+                        ...voxPreviewData.submission,
+                        score,
+                    },
+                });
+            }
+        } catch (error) {
+            console.error('打分失败:', error);
+            alert(`打分失败: ${studentName}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -489,6 +578,16 @@ export default function SubmissionShow() {
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => handleViewModel(submission.file_path, submission.file_name, submission)}
+                                                            >
+                                                                查看
+                                                            </Button>
+                                                        )}
+                                                        {/* VOX 文件显示查看按钮 */}
+                                                        {submission.file_name.toLowerCase().endsWith('.vox') && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleViewVox(submission.file_path, submission.file_name, submission)}
                                                             >
                                                                 查看
                                                             </Button>
@@ -873,6 +972,158 @@ export default function SubmissionShow() {
                                                 }
                                             }}
                                             disabled={loading || !imagePreviewData.submission || submissions.findIndex(s => s.id === imagePreviewData.submission.id) === submissions.length - 1}
+                                        >
+                                            下一个
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* VOX模型预览模态框 */}
+            <Dialog open={voxPreviewOpen} onOpenChange={setVoxPreviewOpen}>
+                <DialogContent className="w-fit !max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>VOX模型预览 - {voxPreviewData?.fileName}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            使用鼠标左键旋转，右键平移，滚轮缩放
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col lg:flex-row gap-6 min-h-[500px]">
+                        {voxPreviewData && (
+                            <>
+                                {/* 左侧：VOX 预览窗口 */}
+                                <div className="flex-[2/3] min-h-[400px] lg:min-h-[500px] aspect-[4/3]">
+                                    <VoxModelViewer
+                                        ref={voxViewerRef}
+                                        fileUrl={voxPreviewData.fileUrl}
+                                        fileName={voxPreviewData.fileName}
+                                        onError={(error) => {
+                                            console.error('VOX模型加载失败:', error);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* 右侧：打分组件 */}
+                                <div className="w-full lg:w-80 flex-shrink-0 border-l lg:pl-6 space-y-6">
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-2">学生信息</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {voxPreviewData.submission?.student.name}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">当前分数</Label>
+                                        <div className="text-3xl font-bold">
+                                            {voxPreviewData.submission?.score !== null && voxPreviewData.submission ? (
+                                                <span className="text-blue-600">{voxPreviewData.submission.score} 分</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">未评分</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">选择分数</Label>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {[
+                                                { grade: 'G', score: 12, label: 'G (12分)' },
+                                                { grade: 'A', score: 10, label: 'A (10分)' },
+                                                { grade: 'B', score: 8, label: 'B (8分)' },
+                                                { grade: 'C', score: 6, label: 'C (6分)' },
+                                                { grade: 'O', score: 0, label: 'O (0分)' },
+                                            ].map(({ grade, score, label }) => (
+                                                <Button
+                                                    key={grade}
+                                                    variant={voxPreviewData.submission && voxPreviewData.submission.score === score ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        if (voxPreviewData.submission) {
+                                                            handleScore(grade as 'G' | 'A' | 'B' | 'C' | 'O', voxPreviewData.submission.id, voxPreviewData.submission.student.name, score);
+                                                        }
+                                                    }}
+                                                    disabled={loading}
+                                                >
+                                                    {grade}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant="destructive"
+                                        onClick={async () => {
+                                            if (!voxPreviewData.submission) return;
+                                            try {
+                                                setLoading(true);
+                                                await axios.post('/api/submissions/cancel-score', {
+                                                    submission_id: voxPreviewData.submission.id,
+                                                });
+                                                // 更新本地状态
+                                                const updatedSubmissions = submissions.map((s) =>
+                                                    s.id === voxPreviewData.submission!.id
+                                                        ? { ...s, score: null }
+                                                        : s
+                                                );
+                                                setSubmissions(updatedSubmissions);
+                                                // 更新模态框中的数据
+                                                setVoxPreviewData({
+                                                    ...voxPreviewData,
+                                                    submission: {
+                                                        ...voxPreviewData.submission,
+                                                        score: null,
+                                                    },
+                                                });
+                                            } catch (error) {
+                                                console.error('取消打分失败:', error);
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        disabled={loading || voxPreviewData.submission?.score === null}
+                                    >
+                                        取消打分
+                                    </Button>
+
+                                    {/* 上一个/下一个按钮 */}
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!voxPreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === voxPreviewData.submission!.id);
+                                                if (currentIndex > 0) {
+                                                    const prevSubmission = submissions[currentIndex - 1];
+                                                    setVoxPreviewData({
+                                                        fileUrl: `/storage/${prevSubmission.file_path}`,
+                                                        fileName: prevSubmission.file_name,
+                                                        submission: prevSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !voxPreviewData.submission || submissions.findIndex(s => s.id === voxPreviewData.submission!.id) === 0}
+                                        >
+                                            上一个
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                if (!voxPreviewData.submission) return;
+                                                const currentIndex = submissions.findIndex(s => s.id === voxPreviewData.submission!.id);
+                                                if (currentIndex < submissions.length - 1) {
+                                                    const nextSubmission = submissions[currentIndex + 1];
+                                                    setVoxPreviewData({
+                                                        fileUrl: `/storage/${nextSubmission.file_path}`,
+                                                        fileName: nextSubmission.file_name,
+                                                        submission: nextSubmission,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={loading || !voxPreviewData.submission || submissions.findIndex(s => s.id === voxPreviewData.submission!.id) === submissions.length - 1}
                                         >
                                             下一个
                                         </Button>

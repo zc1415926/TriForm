@@ -373,4 +373,51 @@ class SubmissionController extends Controller
             'message' => '删除成功',
         ]);
     }
+
+    public function uploadPreview(Request $request, string $id): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'preview_image' => 'required|string',
+        ]);
+
+        $submission = Submission::findOrFail($id);
+
+        // 解码 base64 图片
+        $base64Image = $validated['preview_image'];
+        if (str_starts_with($base64Image, 'data:image')) {
+            $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+        }
+
+        $imageData = base64_decode($base64Image);
+        if ($imageData === false) {
+            return response()->json([
+                'success' => false,
+                'message' => '无效的图片数据',
+            ], 400);
+        }
+
+        // 生成文件名
+        $fileName = uniqid('vox_preview_').'.png';
+        $storagePath = "submissions/{$submission->assignment->lesson->id}/{$submission->assignment->id}";
+
+        // 删除旧的预览图
+        if ($submission->preview_image_path) {
+            Storage::disk('public')->delete($submission->preview_image_path);
+        }
+
+        // 保存新图片
+        $previewPath = $storagePath.'/'.$fileName;
+        Storage::disk('public')->put($previewPath, $imageData);
+
+        // 更新数据库
+        $submission->update([
+            'preview_image_path' => $previewPath,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'preview_image_path' => $previewPath,
+            'message' => '预览图上传成功',
+        ]);
+    }
 }

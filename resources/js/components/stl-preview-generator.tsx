@@ -11,9 +11,12 @@ import {
     Color4,
     StandardMaterial,
     SceneLoader,
+    Mesh,
+    VertexData,
 } from '@babylonjs/core';
 import '@babylonjs/loaders';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { VoxParser, VoxelModel, SceneNode } from '@/lib/vox-parser';
 
 interface StlPreviewGeneratorProps {
     file: File | null;
@@ -24,6 +27,309 @@ export function StlPreviewGenerator({ file, onPreviewGenerated }: StlPreviewGene
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [status, setStatus] = useState<'ready' | 'generating' | 'completed' | 'error'>('ready');
     const [error, setError] = useState<string | null>(null);
+
+    // 创建体素网格（用于VOX文件）
+    const createVoxelMesh = (
+        model: VoxelModel,
+        scene: Scene,
+        palette: Uint32Array,
+        transform?: { _t: { x: number; y: number; z: number }; _r: number },
+    ): Mesh | null => {
+        const { voxels, bounds } = model;
+        const voxelSize = 1;
+
+        // 创建顶点数据
+        const positions: number[] = [];
+        const normals: number[] = [];
+        const indices: number[] = [];
+        const colors: number[] = [];
+
+        let vertexOffset = 0;
+
+        // 创建体素位置哈希集合，用于快速邻居查找
+        const voxelSet = new Set<string>();
+        voxels.forEach((v) => {
+            voxelSet.add(`${v.x},${v.y},${v.z}`);
+        });
+
+        voxels.forEach((voxel) => {
+            const { x, y, z, colorIndex } = voxel;
+            const color = palette[colorIndex - 1] || 0xffffffff;
+
+            const r = (color >> 0) & 0xff;
+            const g = (color >> 8) & 0xff;
+            const b = (color >> 16) & 0xff;
+            const a = (color >> 24) & 0xff;
+
+            if (a < 128) return;
+
+            // 检查每个面是否需要绘制
+            const neighbors = {
+                right: voxelSet.has(`${x + 1},${y},${z}`),
+                left: voxelSet.has(`${x - 1},${y},${z}`),
+                top: voxelSet.has(`${x},${y + 1},${z}`),
+                bottom: voxelSet.has(`${x},${y - 1},${z}`),
+                front: voxelSet.has(`${x},${y},${z + 1}`),
+                back: voxelSet.has(`${x},${y},${z - 1}`),
+            };
+
+            const px = x * voxelSize;
+            const py = y * voxelSize;
+            const pz = z * voxelSize;
+            const half = voxelSize / 2;
+
+            // 添加可见面
+            const addFace = (facePositions: number[], faceNormal: number[]) => {
+                for (let i = 0; i < 4; i++) {
+                    positions.push(facePositions[i * 3], facePositions[i * 3 + 1], facePositions[i * 3 + 2]);
+                    normals.push(faceNormal[0], faceNormal[1], faceNormal[2]);
+                    colors.push(r / 255, g / 255, b / 255, 1);
+                }
+                indices.push(
+                    vertexOffset, vertexOffset + 1, vertexOffset + 2,
+                    vertexOffset, vertexOffset + 2, vertexOffset + 3
+                );
+                vertexOffset += 4;
+            };
+
+            // 六个面的顶点和法线
+            if (!neighbors.right) {
+                addFace([
+                    px + half, py - half, pz + half,
+                    px + half, py + half, pz + half,
+                    px + half, py + half, pz - half,
+                    px + half, py - half, pz - half,
+                ], [1, 0, 0]);
+            }
+            if (!neighbors.left) {
+                addFace([
+                    px - half, py - half, pz - half,
+                    px - half, py + half, pz - half,
+                    px - half, py + half, pz + half,
+                    px - half, py - half, pz + half,
+                ], [-1, 0, 0]);
+            }
+            if (!neighbors.top) {
+                addFace([
+                    px - half, py + half, pz - half,
+                    px + half, py + half, pz - half,
+                    px + half, py + half, pz + half,
+                    px - half, py + half, pz + half,
+                ], [0, 1, 0]);
+            }
+            if (!neighbors.bottom) {
+                addFace([
+                    px - half, py - half, pz + half,
+                    px + half, py - half, pz + half,
+                    px + half, py - half, pz - half,
+                    px - half, py - half, pz - half,
+                ], [0, -1, 0]);
+            }
+            if (!neighbors.front) {
+                addFace([
+                    px - half, py - half, pz + half,
+                    px - half, py + half, pz + half,
+                    px + half, py + half, pz + half,
+                    px + half, py - half, pz + half,
+                ], [0, 0, 1]);
+            }
+            if (!neighbors.back) {
+                addFace([
+                    px + half, py - half, pz - half,
+                    px + half, py + half, pz - half,
+                    px - half, py + half, pz - half,
+                    px - half, py - half, pz - half,
+                ], [0, 0, -1]);
+            }
+        });
+
+        if (positions.length === 0) return null;
+
+        const mesh = new Mesh('voxelMesh', scene);
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.normals = normals;
+        vertexData.indices = indices;
+        vertexData.colors = colors;
+        vertexData.applyToMesh(mesh);
+
+        // 旋转模型：Z轴向上 -> Y轴向上
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.scaling.y = -1;
+
+        // 计算中心点
+        const actualCenterX = (bounds.minX + bounds.maxX) / 2;
+        const actualCenterY = (bounds.minY + bounds.maxY) / 2;
+        const actualCenterZ = (bounds.minZ + bounds.maxZ) / 2;
+
+        // 设置位置
+        mesh.position = new Vector3(-actualCenterX, -1.0 - bounds.minZ, -actualCenterY);
+
+        // 应用场景图变换
+        if (transform?._t) {
+            const tx = Math.abs(transform._t.x) < 10000 ? transform._t.x : 0;
+            const ty = Math.abs(transform._t.y) < 10000 ? transform._t.y : 0;
+            const tz = Math.abs(transform._t.z) < 10000 ? transform._t.z : 0;
+
+            mesh.position.x += tx;
+            mesh.position.y += tz;
+            mesh.position.z += ty;
+
+            // 应用旋转
+            if (transform._r !== 0 && transform._r !== undefined) {
+                const rotMap: Record<number, number> = {
+                    0: 0,
+                    1: Math.PI / 2,
+                    2: Math.PI,
+                    3: -Math.PI / 2,
+                    4: Math.PI / 2,
+                    5: 0,
+                    6: 0,
+                    7: 0,
+                };
+                mesh.rotation.y += rotMap[transform._r] || 0;
+            }
+
+            // 重新调整底部对齐
+            const currentBottomY = bounds.minZ + 0.5 + tz;
+            const targetBottomY = -0.5;
+            mesh.position.y += (targetBottomY - currentBottomY) + 2;
+        }
+
+        return mesh;
+    };
+
+    // 处理VOX文件
+    const handleVoxFile = async (
+        voxFile: File,
+        scene: Scene,
+        camera: ArcRotateCamera,
+        canvas: HTMLCanvasElement,
+        engine: Engine,
+    ) => {
+        try {
+            console.log('开始处理VOX文件:', voxFile.name);
+
+            // 读取文件
+            const arrayBuffer = await voxFile.arrayBuffer();
+            const parser = new VoxParser(arrayBuffer);
+            const parsed = parser.parse();
+
+            if (parsed.models.length === 0) {
+                throw new Error('VOX文件中没有模型数据');
+            }
+
+            // 创建体素网格
+            const voxelMeshes: Mesh[] = [];
+
+            // 如果有场景图节点，使用场景图渲染
+            if (parsed.nodes.length > 0) {
+                parsed.nodes.forEach((node) => {
+                    if (node.type === 'transform') {
+                        const childNode = parsed.nodes.find(
+                            (n) => n.id === node.childId
+                        );
+                        if (
+                            childNode &&
+                            childNode.type === 'shape' &&
+                            childNode.models.length > 0
+                        ) {
+                            const modelId = childNode.models[0];
+                            const model = parsed.models[modelId];
+                            if (model && model.voxels.length > 0) {
+                                const transform = node.frames[0];
+                                const mesh = createVoxelMesh(
+                                    model,
+                                    scene,
+                                    parsed.palette,
+                                    transform,
+                                );
+                                if (mesh) {
+                                    voxelMeshes.push(mesh);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 如果场景图渲染失败，回退到简单模式
+            if (voxelMeshes.length === 0) {
+                parsed.models.forEach((model, index) => {
+                    if (model.voxels.length > 0) {
+                        const mesh = createVoxelMesh(model, scene, parsed.palette);
+                        if (mesh) {
+                            mesh.position.x = index * 20;
+                            voxelMeshes.push(mesh);
+                        }
+                    }
+                });
+            }
+
+            if (voxelMeshes.length === 0) {
+                throw new Error('无法创建体素网格');
+            }
+
+            // 计算边界框
+            let maxDim = 0;
+            parsed.models.forEach((model) => {
+                const dim = Math.max(
+                    model.bounds.maxX - model.bounds.minX,
+                    model.bounds.maxY - model.bounds.minY,
+                    model.bounds.maxZ - model.bounds.minZ,
+                );
+                maxDim = Math.max(maxDim, dim);
+            });
+
+            // 调整相机
+            camera.setTarget(Vector3.Zero());
+            camera.radius = maxDim * 2;
+            camera.beta = Math.PI / 3;
+            camera.alpha = Math.PI / 4;
+
+            // 渲染并生成缩略图
+            let frameCount = 0;
+            const maxFrames = 3;
+
+            const renderFrame = () => {
+                if (frameCount < maxFrames) {
+                    scene.render();
+                    frameCount++;
+                    requestAnimationFrame(renderFrame);
+                } else {
+                    setTimeout(() => {
+                        canvas.toBlob(
+                            (blob) => {
+                                if (blob) {
+                                    console.log('VOX缩略图生成成功，大小:', blob.size, '字节');
+                                    const baseName = voxFile.name.replace(/\.[^/.]+$/, '');
+                                    const thumbnailFile = new File([blob], `${baseName}_thumbnail.jpg`, {
+                                        type: 'image/jpeg',
+                                    });
+                                    onPreviewGenerated(thumbnailFile);
+                                } else {
+                                    console.error('生成VOX缩略图失败：blob 为空');
+                                    setStatus('error');
+                                    setError('生成VOX缩略图失败');
+                                }
+                                setStatus('completed');
+                                engine.dispose();
+                            },
+                            'image/jpeg',
+                            0.85,
+                        );
+                    }, 200);
+                }
+            };
+
+            renderFrame();
+        } catch (err) {
+            console.error('VOX文件处理失败:', err);
+            setStatus('error');
+            setError('VOX文件处理失败: ' + (err instanceof Error ? err.message : '未知错误'));
+            engine.dispose();
+        }
+    };
 
     const generateThumbnail = useCallback(() => {
         if (!file || !canvasRef.current) return;
@@ -81,10 +387,16 @@ export function StlPreviewGenerator({ file, onPreviewGenerated }: StlPreviewGene
         // 获取文件扩展名
         const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
 
+        console.log('开始加载3D模型:', file.name, '类型:', fileExtension, '文件大小:', file.size);
+
+        // 处理 VOX 文件
+        if (fileExtension === 'vox') {
+            handleVoxFile(file, scene, camera, canvas, engine);
+            return;
+        }
+
         // 创建 blob URL
         const fileUrl = URL.createObjectURL(file);
-
-        console.log('开始加载3D模型:', file.name, '类型:', fileExtension, 'URL:', fileUrl, '文件大小:', file.size);
 
         // 根据文件类型确定加载器扩展名
         const loaderExtension = fileExtension === 'obj' ? '.obj' : '.stl';

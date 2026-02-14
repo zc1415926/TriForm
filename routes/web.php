@@ -44,5 +44,6 @@ Route::get('api/submissions/all', [\App\Http\Controllers\SubmissionController::c
 Route::post('api/submissions/score', [\App\Http\Controllers\SubmissionController::class, 'updateScore'])->name('api.submissions.score');
 Route::post('api/submissions/cancel-score', [\App\Http\Controllers\SubmissionController::class, 'cancelScore'])->name('api.submissions.cancel-score');
 Route::delete('api/submissions/{id}', [\App\Http\Controllers\SubmissionController::class, 'destroy'])->name('api.submissions.destroy');
+Route::post('api/submissions/{id}/preview', [\App\Http\Controllers\SubmissionController::class, 'uploadPreview'])->name('api.submissions.upload-preview');
 
 require __DIR__.'/settings.php';
