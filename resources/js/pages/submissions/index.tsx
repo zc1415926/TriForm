@@ -440,9 +440,6 @@ export default function SubmissionIndex() {
                             {/* 年份选择 */}
                             <div className="space-y-3">
                                 <Label htmlFor="year" className="flex items-center gap-2 text-base">
-                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <Calendar className="w-4 h-4 text-blue-600" />
-                                    </div>
                                     <span className="font-semibold">📚 选择年份</span>
                                 </Label>
                                 <Select onValueChange={handleYearChange} disabled={loading}>
