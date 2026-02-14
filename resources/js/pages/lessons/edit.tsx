@@ -67,11 +67,7 @@ export default function LessonEdit() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route('lessons.update', lesson.id), {
-            onSuccess: () => {
-                // 成功后的处理
-            },
-        });
+        put(route('lessons.update', lesson.id));
     };
 
     return (

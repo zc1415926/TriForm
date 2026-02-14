@@ -1,4 +1,4 @@
-import { Form, Link, useForm } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Plus, X } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import RichTextEditor from '@/components/ui/tiptap-editor';
-import { index } from '@/routes/lessons';
 
 interface UploadType {
     id: number;
@@ -93,7 +92,7 @@ export function LessonForm({
     return (
         <div className="mx-auto max-w-7xl pb-6 px-4 w-full">
             <div className="space-y-8">
-                <Form onSubmit={onSubmit} className="space-y-8 pt-6 w-full">
+                <form onSubmit={onSubmit} className="space-y-8 pt-6 w-full">
                     {/* 基本信息区块 */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 space-y-2">
@@ -274,7 +273,7 @@ export function LessonForm({
 
                     {/* 操作按钮 */}
                     <div className="flex items-center justify-end gap-4 pt-6 border-t">
-                        <Link href={index().url}>
+                        <Link href="/lessons">
                             <Button variant="outline" type="button" size="lg">
                                 取消
                             </Button>
@@ -283,7 +282,7 @@ export function LessonForm({
                             {processing ? processingLabel : submitLabel}
                         </Button>
                     </div>
-                </Form>
+                </form>
             </div>
         </div>
     );
