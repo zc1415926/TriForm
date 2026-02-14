@@ -19,19 +19,44 @@ function formatHTML(html: string): string {
     let indent = 0;
     const tab = '  ';
 
-    html.split(/>(\s*)</).forEach((element) => {
-        if (element.match(/^\/\w/)) {
-            indent--;
+    // 先移除所有空白，然后按 > 分割（保留 >）
+    const cleaned = html.replace(/>\s*</g, '><').trim();
+    
+    // 按标签分割
+    const tokens = cleaned.split(/(<[^>]+>)/).filter(token => token.trim() !== '');
+    
+    tokens.forEach((token) => {
+        const trimmed = token.trim();
+        if (!trimmed) return;
+
+        // 结束标签：减少缩进
+        if (trimmed.match(/^<\/\w/)) {
+            indent = Math.max(0, indent - 1);
+            formatted += tab.repeat(indent) + trimmed + '\n';
         }
-
-        formatted += new Array(indent + 1).join(tab) + '<' + element + '>\r\n';
-
-        if (element.match(/^<?\w[^>]*[^\/]$/) && !element.startsWith('input') && !element.startsWith('img') && !element.startsWith('br')) {
+        // 自闭合标签：保持当前缩进
+        else if (trimmed.match(/^<(br|hr|img|input|meta|link|area|base|col|embed|param|source|track|wbr)[\s>]/i)) {
+            formatted += tab.repeat(indent) + trimmed + '\n';
+        }
+        // 开始标签：当前缩进，然后增加
+        else if (trimmed.match(/^<\w/)) {
+            formatted += tab.repeat(indent) + trimmed + '\n';
             indent++;
+        }
+        // 文本内容
+        else {
+            // 如果文本包含换行，逐行处理
+            const lines = trimmed.split('\n');
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    formatted += tab.repeat(indent) + trimmedLine + '\n';
+                }
+            });
         }
     });
 
-    return formatted.substring(1, formatted.length - 3);
+    return formatted.trim();
 }
 
 export default function RichTextEditor({ content, onChange, year, lessonId }: RichTextEditorProps) {
