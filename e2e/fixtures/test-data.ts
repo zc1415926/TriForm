@@ -4,14 +4,14 @@
 
 export const testUsers = {
     admin: {
-        email: 'admin@example.com',
-        password: 'password',
-        name: 'Admin User',
+        email: 'zc1415926@126.com',
+        password: 'zaq12wsx',
+        name: '管理员',
     },
     teacher: {
-        email: 'teacher@example.com',
-        password: 'password',
-        name: 'Teacher User',
+        email: 'zc1415926@126.com',
+        password: 'zaq12wsx',
+        name: '管理员',
     },
 };
 
