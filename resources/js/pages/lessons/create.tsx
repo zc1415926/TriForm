@@ -1,14 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { LessonForm } from '@/components/lesson-form';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/lessons';
 import type { BreadcrumbItem } from '@/types';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '课时管理',
-        href: index().url,
+        href: '/lessons',
     },
     {
         title: '添加课时',

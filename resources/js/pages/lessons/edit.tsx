@@ -1,13 +1,12 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { LessonForm } from '@/components/lesson-form';
 import AppLayout from '@/layouts/app-layout';
-import { index, update } from '@/routes/lessons';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs = (lessonName: string): BreadcrumbItem[] => [
+const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '课时管理',
-        href: index().url,
+        href: '/lessons',
     },
     {
         title: '编辑课时',
@@ -53,7 +52,7 @@ type PageProps = {
 export default function LessonEdit() {
     const { lesson, uploadTypes } = usePage<PageProps>().props;
 
-    const { data, setData, processing, errors } = useForm({
+    const { data, setData, processing, errors, put } = useForm({
         name: lesson.name,
         year: lesson.year,
         is_active: lesson.is_active,
@@ -68,11 +67,15 @@ export default function LessonEdit() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        update(lesson.id);
+        put(route('lessons.update', lesson.id), {
+            onSuccess: () => {
+                // 成功后的处理
+            },
+        });
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs(lesson.name)}>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="编辑课时" />
             <LessonForm
                 uploadTypes={uploadTypes}
