@@ -1,9 +1,10 @@
 import Image from '@tiptap/extension-image';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Image as ImageIcon, Undo, Redo, Paperclip, FileText } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Image as ImageIcon, Undo, Redo, Paperclip, FileText, Code2, Wand2, AlertCircle } from 'lucide-react';
 import { Button } from './button';
-import { useRef, useState } from 'react';
+import { Textarea } from './textarea';
+import { useRef, useState, useCallback } from 'react';
 
 interface RichTextEditorProps {
     content: string;
@@ -12,10 +13,35 @@ interface RichTextEditorProps {
     lessonId?: string | number;
 }
 
+// 简单的HTML格式化函数
+function formatHTML(html: string): string {
+    let formatted = '';
+    let indent = 0;
+    const tab = '  ';
+
+    html.split(/>(\s*)</).forEach((element) => {
+        if (element.match(/^\/\w/)) {
+            indent--;
+        }
+
+        formatted += new Array(indent + 1).join(tab) + '<' + element + '>\r\n';
+
+        if (element.match(/^<?\w[^>]*[^\/]$/) && !element.startsWith('input') && !element.startsWith('img') && !element.startsWith('br')) {
+            indent++;
+        }
+    });
+
+    return formatted.substring(1, formatted.length - 3);
+}
+
 export default function RichTextEditor({ content, onChange, year, lessonId }: RichTextEditorProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const [isSourceMode, setIsSourceMode] = useState(false);
+    const [sourceContent, setSourceContent] = useState('');
+    const [parseError, setParseError] = useState<string | null>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     const editor = useEditor({
         extensions: [
@@ -54,6 +80,44 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
         },
         immediatelyRender: false,
     });
+
+    // 切换到源代码模式
+    const switchToSourceMode = useCallback(() => {
+        if (editor) {
+            setSourceContent(formatHTML(editor.getHTML()));
+            setParseError(null);
+            setIsSourceMode(true);
+        }
+    }, [editor]);
+
+    // 切换到可视化模式
+    const switchToVisualMode = useCallback(() => {
+        if (!editor) return;
+
+        try {
+            // 尝试解析HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = sourceContent.trim();
+
+            // 如果解析成功，更新编辑器
+            editor.commands.setContent(sourceContent);
+            onChange(sourceContent);
+            setParseError(null);
+            setIsSourceMode(false);
+        } catch (error) {
+            setParseError('HTML 格式无效，请检查标签是否正确闭合');
+        }
+    }, [editor, sourceContent, onChange]);
+
+    // 格式化源代码
+    const handleFormatSource = useCallback(() => {
+        try {
+            const formatted = formatHTML(sourceContent);
+            setSourceContent(formatted);
+        } catch (error) {
+            setParseError('格式化失败，请检查 HTML 语法');
+        }
+    }, [sourceContent]);
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -162,129 +226,203 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
         <div className="border rounded-lg overflow-hidden">
             {/* 工具栏 */}
             <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/50">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={editor.isActive('bold') ? 'bg-muted' : ''}
-                >
-                    <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={editor.isActive('italic') ? 'bg-muted' : ''}
-                >
-                    <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                    className={editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}
-                >
-                    <Heading1 className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className={editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}
-                >
-                    <Heading2 className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={editor.isActive('bulletList') ? 'bg-muted' : ''}
-                >
-                    <List className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={editor.isActive('orderedList') ? 'bg-muted' : ''}
-                >
-                    <ListOrdered className="h-4 w-4" />
-                </Button>
-                <div className="w-px h-6 bg-border mx-1" />
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().undo().run()}
-                    disabled={!editor.can().undo()}
-                >
-                    <Undo className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().redo().run()}
-                    disabled={!editor.can().redo()}
-                >
-                    <Redo className="h-4 w-4" />
-                </Button>
-                <div className="w-px h-6 bg-border mx-1" />
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={!year || !lessonId}
-                    title="插入图片"
-                >
-                    <ImageIcon className="h-4 w-4" />
-                </Button>
-                <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                />
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!year || !lessonId || isUploading}
-                    title="上传附件"
-                >
-                    {isUploading ? (
-                        <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                        <Paperclip className="h-4 w-4" />
-                    )}
-                </Button>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                />
+                {!isSourceMode ? (
+                    <>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleBold().run()}
+                            className={editor.isActive('bold') ? 'bg-muted' : ''}
+                        >
+                            <Bold className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleItalic().run()}
+                            className={editor.isActive('italic') ? 'bg-muted' : ''}
+                        >
+                            <Italic className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                            className={editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}
+                        >
+                            <Heading1 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                            className={editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}
+                        >
+                            <Heading2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleBulletList().run()}
+                            className={editor.isActive('bulletList') ? 'bg-muted' : ''}
+                        >
+                            <List className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                            className={editor.isActive('orderedList') ? 'bg-muted' : ''}
+                        >
+                            <ListOrdered className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-border mx-1" />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().undo().run()}
+                            disabled={!editor.can().undo()}
+                        >
+                            <Undo className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => editor.chain().focus().redo().run()}
+                            disabled={!editor.can().redo()}
+                        >
+                            <Redo className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-border mx-1" />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => imageInputRef.current?.click()}
+                            disabled={!year || !lessonId}
+                            title="插入图片"
+                        >
+                            <ImageIcon className="h-4 w-4" />
+                        </Button>
+                        <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={!year || !lessonId || isUploading}
+                            title="上传附件"
+                        >
+                            {isUploading ? (
+                                <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Paperclip className="h-4 w-4" />
+                            )}
+                        </Button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                        />
+                        <div className="w-px h-6 bg-border mx-1" />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={switchToSourceMode}
+                            title="查看源代码"
+                        >
+                            <Code2 className="h-4 w-4" />
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleFormatSource}
+                            title="格式化代码"
+                        >
+                            <Wand2 className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-border mx-1" />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={switchToVisualMode}
+                            className="text-primary"
+                            title="返回可视化编辑"
+                        >
+                            <Code2 className="h-4 w-4" />
+                        </Button>
+                    </>
+                )}
             </div>
 
+            {/* 错误提示 */}
+            {parseError && (
+                <div className="px-3 py-2 bg-destructive/10 border-b border-destructive/20 flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    {parseError}
+                </div>
+            )}
+
             {/* 编辑器内容 */}
-            <EditorContent editor={editor} />
+            {!isSourceMode ? (
+                <EditorContent editor={editor} />
+            ) : (
+                <div className="relative">
+                    <Textarea
+                        ref={sourceTextareaRef}
+                        value={sourceContent}
+                        onChange={(e) => setSourceContent(e.target.value)}
+                        className="min-h-[400px] font-mono text-sm resize-none border-0 rounded-none focus-visible:ring-0"
+                        placeholder="在此编辑 HTML 源代码..."
+                        spellCheck={false}
+                    />
+                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-muted text-xs text-muted-foreground rounded">
+                        HTML 源代码模式
+                    </div>
+                </div>
+            )}
 
             {/* 提示信息 */}
             <div className="px-3 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
-                <span>提示: 支持直接粘贴图片</span>
-                <span className="flex items-center gap-1">
-                    <FileText className="h-3 w-3" />
-                    附件最大 50MB
-                </span>
+                {!isSourceMode ? (
+                    <>
+                        <span>提示: 支持直接粘贴图片</span>
+                        <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            附件最大 50MB
+                        </span>
+                        <span className="flex items-center gap-1 ml-auto">
+                            <Code2 className="h-3 w-3" />
+                            点击源代码按钮编辑 HTML
+                        </span>
+                    </>
+                ) : (
+                    <>
+                        <span className="text-destructive">警告: 编辑源代码可能导致格式丢失</span>
+                        <span className="ml-auto">确保标签正确闭合后再切换回可视化模式</span>
+                    </>
+                )}
             </div>
         </div>
     );
