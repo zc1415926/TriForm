@@ -630,17 +630,25 @@ export default function SubmissionIndex() {
                                                                 上传文件
                                                             </Label>
                                                             <div className="relative">
-                                                                <Input
-                                                                    type="file"
-                                                                    accept={assignment.upload_type.extensions.map(ext => `.${ext}`).join(',')}
-                                                                    onChange={(e) =>
-                                                                        handleFileChange(
-                                                                            index,
-                                                                            e.target.files?.[0] || null
-                                                                        )
-                                                                    }
-                                                                    className="rounded-xl h-12 border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                                />
+                                                                <label className="flex items-center gap-3 cursor-pointer group">
+                                                                    <input
+                                                                        type="file"
+                                                                        accept={assignment.upload_type.extensions.map(ext => `.${ext}`).join(',')}
+                                                                        onChange={(e) =>
+                                                                            handleFileChange(
+                                                                                index,
+                                                                                e.target.files?.[0] || null
+                                                                            )
+                                                                        }
+                                                                        className="sr-only"
+                                                                    />
+                                                                    <div className="px-5 py-2.5 bg-blue-50 text-blue-700 rounded-lg font-medium group-hover:bg-blue-100 transition-colors border-0">
+                                                                        📁 选择文件
+                                                                    </div>
+                                                                    <span className="text-sm text-gray-500">
+                                                                        {data.assignments[index]?.file ? data.assignments[index].file.name : '未选择文件'}
+                                                                    </span>
+                                                                </label>
                                                             </div>
                                                             {data.assignments[index]?.file && (
                                                                 <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-xl p-3">
