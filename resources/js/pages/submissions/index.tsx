@@ -592,9 +592,6 @@ export default function SubmissionIndex() {
                                                         </div>
 
                                                         <div className="space-y-3">
-                                                            <Label className="flex items-center gap-2">
-                                                                上传文件
-                                                            </Label>
                                                             <div className="relative">
                                                                 <label className="flex items-center gap-3 cursor-pointer group">
                                                                     <input
