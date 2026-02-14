@@ -70,11 +70,73 @@ class StudentController extends Controller
             'grade' => 'required|integer|min:1|max:6',
             'class' => 'required|integer|min:1|max:20',
             'year' => 'required|integer|min:2020|max:2030',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
         ]);
+
+        // 处理头像上传 - 按入学年份分类存放
+        if ($request->hasFile('avatar')) {
+            $year = $validated['year'];
+            $validated['avatar'] = $request->file('avatar')->store("avatars/students/{$year}", 'public');
+        }
 
         Student::create($validated);
 
         return redirect()->route('students.index')->with('success', '学生创建成功');
+    }
+
+    public function show(Student $student): \Inertia\Response
+    {
+        $student->load(['submissions' => function ($query): void {
+            $query->with('assignment')
+                ->latest()
+                ->get();
+        }]);
+
+        $submissions = $student->submissions->map(function ($submission): array {
+            return [
+                'id' => $submission->id,
+                'assignment_name' => $submission->assignment?->name ?? '未知作业',
+                'file_name' => $submission->file_name,
+                'file_size' => $this->formatFileSize($submission->file_size),
+                'preview_image_path' => $submission->preview_image_path,
+                'status' => $submission->status,
+                'score' => $submission->score,
+                'feedback' => $submission->feedback,
+                'created_at' => $submission->created_at->format('Y-m-d H:i'),
+            ];
+        });
+
+        return Inertia::render('students/show', [
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'grade_text' => $student->grade_text,
+                'class' => $student->class,
+                'year' => $student->year,
+                'avatar' => $student->avatar,
+                'created_at' => $student->created_at->format('Y-m-d'),
+            ],
+            'submissions' => $submissions,
+            'stats' => [
+                'total_submissions' => $submissions->count(),
+                'scored_submissions' => $submissions->whereNotNull('score')->count(),
+                'total_score' => $submissions->sum('score') ?? 0,
+                'avg_score' => (float) ($submissions->whereNotNull('score')->avg('score') ?? 0),
+            ],
+        ]);
+    }
+
+    private function formatFileSize(int $bytes): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $unitIndex = floor(log($bytes, 1024));
+
+        return round($bytes / (1024 ** $unitIndex), 2).' '.$units[$unitIndex];
     }
 
     public function edit(Student $student): \Inertia\Response
@@ -91,7 +153,27 @@ class StudentController extends Controller
             'grade' => 'required|integer|min:1|max:6',
             'class' => 'required|integer|min:1|max:20',
             'year' => 'required|integer|min:2020|max:2030',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'remove_avatar' => 'nullable|boolean',
         ]);
+
+        // 处理头像删除
+        if (! empty($validated['remove_avatar']) && $student->avatar) {
+            \Storage::disk('public')->delete($student->avatar);
+            $validated['avatar'] = null;
+        }
+
+        // 处理新头像上传 - 按入学年份分类存放
+        if ($request->hasFile('avatar')) {
+            // 删除旧头像
+            if ($student->avatar) {
+                \Storage::disk('public')->delete($student->avatar);
+            }
+            $year = $validated['year'];
+            $validated['avatar'] = $request->file('avatar')->store("avatars/students/{$year}", 'public');
+        }
+
+        unset($validated['remove_avatar']);
 
         $student->update($validated);
 

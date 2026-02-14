@@ -21,7 +21,9 @@ class LessonController extends Controller
 
     public function create(): \Inertia\Response
     {
-        return Inertia::render('lessons/create');
+        return Inertia::render('lessons/create', [
+            'uploadTypes' => \App\Models\UploadType::all(['id', 'name', 'description']),
+        ]);
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -58,18 +60,27 @@ class LessonController extends Controller
             }
         }
 
-        return redirect()->route('lessons.index')->with('success', '课时创建成功');
+        return redirect()->route('lessons.index')
+            ->with('success', '课时创建成功')
+            ->with('lesson', $lesson);
     }
 
     public function edit(Lesson $lesson): \Inertia\Response
     {
         return Inertia::render('lessons/edit', [
-            'lesson' => $lesson,
+            'lesson' => $lesson->load('assignments'),
+            'uploadTypes' => \App\Models\UploadType::all(['id', 'name', 'description']),
         ]);
     }
 
     public function update(Request $request, Lesson $lesson): \Illuminate\Http\RedirectResponse
     {
+        \Log::debug('Update called', [
+            'lesson_id' => $lesson->id,
+            'lesson_name_before' => $lesson->name,
+            'request_name' => $request->input('name'),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'year' => 'required|string|max:10',

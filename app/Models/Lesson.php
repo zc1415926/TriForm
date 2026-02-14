@@ -25,4 +25,9 @@ class Lesson extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
 }

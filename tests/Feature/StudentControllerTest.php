@@ -182,4 +182,75 @@ describe('StudentController', function () {
             $this->assertDatabaseMissing('students', ['id' => $student->id]);
         });
     });
+
+    describe('show', function () {
+        test('can view student details', function () {
+            $student = Student::factory()->create([
+                'name' => '张三',
+                'grade' => 3,
+                'class' => 2,
+                'year' => 2025,
+            ]);
+
+            $response = $this->get(route('students.show', $student));
+
+            $response->assertOk()
+                ->assertInertia(fn (AssertableInertia $page) => $page
+                    ->has('student')
+                    ->where('student.name', '张三')
+                    ->where('student.grade', 3)
+                    ->where('student.grade_text', '三')
+                    ->where('student.class', 2)
+                    ->where('student.year', 2025)
+                    ->has('submissions')
+                    ->has('stats')
+                );
+        });
+
+        test('shows student submissions in descending order', function () {
+            $student = Student::factory()->create();
+            $submission1 = Submission::factory()->create([
+                'student_id' => $student->id,
+                'score' => 10,
+                'created_at' => now()->subDays(2),
+            ]);
+            $submission2 = Submission::factory()->create([
+                'student_id' => $student->id,
+                'score' => 8,
+                'created_at' => now()->subDay(),
+            ]);
+            $submission3 = Submission::factory()->create([
+                'student_id' => $student->id,
+                'score' => 9,
+                'created_at' => now(),
+            ]);
+
+            $response = $this->get(route('students.show', $student));
+
+            $response->assertOk()
+                ->assertInertia(fn (AssertableInertia $page) => $page
+                    ->has('submissions', 3)
+                    ->where('submissions.0.score', 9)
+                    ->where('submissions.1.score', 8)
+                    ->where('submissions.2.score', 10)
+                );
+        });
+
+        test('calculates correct stats', function () {
+            $student = Student::factory()->create();
+            Submission::factory()->create(['student_id' => $student->id, 'score' => 10]);
+            Submission::factory()->create(['student_id' => $student->id, 'score' => 8]);
+            Submission::factory()->create(['student_id' => $student->id, 'score' => null]);
+
+            $response = $this->get(route('students.show', $student));
+
+            $response->assertOk()
+                ->assertInertia(fn (AssertableInertia $page) => $page
+                    ->where('stats.total_submissions', 3)
+                    ->where('stats.scored_submissions', 2)
+                    ->where('stats.total_score', 18)
+                    ->where('stats.avg_score', fn ($avg) => $avg == 9.0)
+                );
+        });
+    });
 });

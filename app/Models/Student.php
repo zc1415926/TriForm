@@ -16,6 +16,7 @@ class Student extends Model
         'grade',
         'class',
         'year',
+        'avatar',
     ];
 
     protected $casts = [

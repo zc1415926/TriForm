@@ -74,4 +74,55 @@ class UploadController extends Controller
             'success' => true,
         ]);
     }
+
+    /**
+     * 上传附件（非图片文件）
+     */
+    public function attachment(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:51200', // 最大50MB
+            'year' => 'required|string',
+            'lesson_id' => 'required|string',
+        ]);
+
+        $file = $request->file('file');
+        $year = $request->input('year');
+        $lessonId = $request->input('lesson_id');
+
+        // 生成唯一文件名
+        $originalName = $file->getClientOriginalName();
+        $extension = $file->getClientOriginalExtension();
+        $newFileName = uniqid().'_'.time().'.'.$extension;
+
+        // 存储路径：uploads/{year}/{lesson_id}/attachments/{filename}
+        $path = $file->storeAs("uploads/{$year}/{$lessonId}/attachments", $newFileName, 'public');
+
+        // 获取文件大小（可读格式）
+        $size = $file->getSize();
+        $readableSize = $this->formatFileSize($size);
+
+        $url = Storage::disk('public')->url($path);
+
+        return response()->json([
+            'url' => $url,
+            'original_name' => $originalName,
+            'size' => $readableSize,
+        ]);
+    }
+
+    /**
+     * 格式化文件大小
+     */
+    private function formatFileSize(int $bytes): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = floor(log($bytes, 1024));
+
+        return round($bytes / (1024 ** $i), 2).' '.$units[$i];
+    }
 }

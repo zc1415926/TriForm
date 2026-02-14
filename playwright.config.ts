@@ -32,7 +32,7 @@ export default defineConfig({
                     executablePath: '/usr/bin/firefox',
                     args: ['--no-sandbox', '--disable-setuid-sandbox'],
                 },
-                viewport: { width: 1280, height: 720 },
+                viewport: null,
             },
         },
     ],

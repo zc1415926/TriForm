@@ -1,5 +1,5 @@
-import { Head, router, usePage, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { index, store, update, destroy } from '@/routes/students';
+import { index, store, update, destroy, show } from '@/routes/students';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -347,7 +347,14 @@ export default function StudentIndex() {
                         <TableBody>
                             {sortedStudents.map((student: Student) => (
                                 <TableRow key={student.id} className="hover:bg-muted/30 transition-colors">
-                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <Link
+                                            href={show(student.id).url}
+                                            className="text-primary hover:underline hover:text-primary/80 transition-colors"
+                                        >
+                                            {student.name}
+                                        </Link>
+                                    </TableCell>
                                     <TableCell className="text-center">{gradeMap[student.grade] || '未知'}</TableCell>
                                     <TableCell className="text-center">{student.class}</TableCell>
                                     <TableCell className="text-center">{student.year}</TableCell>
@@ -355,11 +362,22 @@ export default function StudentIndex() {
                                     <TableCell className="text-center text-muted-foreground">{student.total_submissions}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
+                                            <Link href={show(student.id).url}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8"
+                                                    title="查看详情"
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Button>
+                                            </Link>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8"
                                                 onClick={() => openEditModal(student)}
+                                                title="编辑"
                                             >
                                                 <Pencil className="size-4" />
                                             </Button>
@@ -368,6 +386,7 @@ export default function StudentIndex() {
                                                 size="icon"
                                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => openDeleteModal(student.id)}
+                                                title="删除"
                                             >
                                                 <Trash2 className="size-4" />
                                             </Button>
