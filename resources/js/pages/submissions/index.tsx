@@ -104,11 +104,11 @@ const MemoizedStlPreview = React.memo(function MemoizedStlPreview({
     if (previewFile) {
         const previewUrl = URL.createObjectURL(previewFile);
         return (
-            <div className="rounded-xl overflow-hidden border-2 border-blue-200">
+            <div className="rounded-xl overflow-hidden border-2 border-blue-200 w-fit">
                 <img
                     src={previewUrl}
                     alt="STL 预览"
-                    className="w-full"
+                    className="max-w-full h-auto"
                 />
             </div>
         );
