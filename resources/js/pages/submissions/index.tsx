@@ -521,9 +521,6 @@ export default function SubmissionIndex() {
                             {selectedLesson && selectedLesson.content && (
                                 <div className="space-y-3">
                                     <Label className="flex items-center gap-2 text-base">
-                                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                            <FileText className="w-4 h-4 text-purple-600" />
-                                        </div>
                                         <span className="font-semibold">📝 课时内容</span>
                                     </Label>
                                     <div className="rounded-xl border-2 border-purple-100 bg-purple-50/50 p-4 tiptap-editor-content">
