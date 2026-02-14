@@ -449,7 +449,7 @@ export default function SubmissionIndex() {
                                     <SelectContent className="rounded-xl">
                                         {years.map((year) => (
                                             <SelectItem key={year} value={year}>
-                                                🎓 {year}年
+                                                {year}年
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -509,7 +509,7 @@ export default function SubmissionIndex() {
                                         <SelectContent className="rounded-xl">
                                             {lessons.map((lesson) => (
                                                 <SelectItem key={lesson.id} value={lesson.id.toString()}>
-                                                    📚 {lesson.name}
+                                                    {lesson.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
