@@ -829,11 +829,11 @@ export default function SubmissionShow() {
                         {imagePreviewData && (
                             <>
                                 {/* 左侧：图片预览窗口 */}
-                                <div className="flex-[2/3] min-h-[400px] flex items-center justify-center bg-black/5 rounded-lg">
+                                <div className="flex-[2/3] min-h-[500px] flex items-center justify-center bg-black rounded-lg overflow-hidden">
                                     <img
                                         src={imagePreviewData.fileUrl}
                                         alt={imagePreviewData.fileName}
-                                        className="max-w-[47.5vw] max-h-[40vh] object-contain rounded-lg shadow-lg"
+                                        className="w-full h-full max-h-[70vh] object-contain"
                                     />
                                 </div>
                                 {/* 右侧：打分面板 */}

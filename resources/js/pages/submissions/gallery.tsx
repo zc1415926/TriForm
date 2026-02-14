@@ -769,18 +769,18 @@ export default function SubmissionGallery() {
 
             {/* 图片预览模态框 */}
             <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
-                <DialogContent className="w-fit !max-w-[95vw] !max-h-[90vh] overflow-hidden p-0 rounded-2xl">
+                <DialogContent className="!max-w-[98vw] !max-h-[95vh] overflow-hidden p-0 rounded-none border-0 bg-black">
                     <VisuallyHidden>
                         <DialogHeader>
                             <DialogTitle>图片预览</DialogTitle>
                             <DialogDescription>点击图片查看大图</DialogDescription>
                         </DialogHeader>
                     </VisuallyHidden>
-                    <div className="flex flex-col items-center justify-center min-h-[50vh] bg-gradient-to-br from-gray-900 to-gray-800 p-6">
+                    <div className="flex items-center justify-center w-full h-full bg-black">
                         <img
                             src={imagePreviewUrl}
                             alt="预览图"
-                            className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
+                            className="w-full h-full max-h-[95vh] object-contain"
                         />
                     </div>
                 </DialogContent>
