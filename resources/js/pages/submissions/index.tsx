@@ -459,9 +459,6 @@ export default function SubmissionIndex() {
                             {/* 学生选择 */}
                             <div className="space-y-3">
                                 <Label htmlFor="student_id" className="flex items-center gap-2 text-base">
-                                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                        <User className="w-4 h-4 text-green-600" />
-                                    </div>
                                     <span className="font-semibold">👤 选择学生</span>
                                 </Label>
                                 {loading && students.length === 0 ? (
@@ -497,9 +494,6 @@ export default function SubmissionIndex() {
                             {/* 课时选择 */}
                             <div className="space-y-3">
                                 <Label htmlFor="lesson" className="flex items-center gap-2 text-base">
-                                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                                        <BookOpen className="w-4 h-4 text-amber-600" />
-                                    </div>
                                     <span className="font-semibold">📖 选择课时</span>
                                 </Label>
                                 {loading && lessons.length === 0 ? (
@@ -541,9 +535,6 @@ export default function SubmissionIndex() {
                             {/* 作业上传区域 */}
                             <div className="space-y-4">
                                 <Label className="flex items-center gap-2 text-base">
-                                    <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
-                                        <FileUp className="w-4 h-4 text-pink-600" />
-                                    </div>
                                     <span className="font-semibold">🎨 作业列表</span>
                                     {selectedFilesCount > 0 && (
                                         <Badge variant="colored" className="ml-2 bg-green-100 text-green-700 border-green-200">
