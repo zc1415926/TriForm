@@ -25,13 +25,16 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 创建管理员用户
-        if (! User::where('email', 'admin@example.com')->exists()) {
-            User::factory()->create([
+        // 创建管理员用户（带角色）
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
                 'name' => '管理员',
-                'email' => 'admin@example.com',
-            ]);
-        }
+                'role' => 'admin,teacher',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         // 创建上传类型
         $imageUploadType = UploadType::firstOrCreate(
@@ -183,6 +186,9 @@ class DatabaseSeeder extends Seeder
         // 创建提交记录
         $this->createSubmissions($students2025, Assignment::whereHas('lesson', fn ($q) => $q->where('year', '2025'))->get());
         $this->createSubmissions($students2026, Assignment::whereHas('lesson', fn ($q) => $q->where('year', '2026'))->get());
+
+        // 调用 AdminSeeder 创建管理员账号
+        $this->call(AdminSeeder::class);
 
         $this->command->info('测试数据创建完成！');
         $this->command->info('- 学生: '.Student::count().' 人');
