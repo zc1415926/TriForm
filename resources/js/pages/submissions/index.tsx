@@ -478,12 +478,7 @@ export default function SubmissionIndex() {
                                         <SelectContent className="rounded-xl">
                                             {students.map((student) => (
                                                 <SelectItem key={student.id} value={student.id.toString()}>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                                                            {student.name.charAt(0)}
-                                                        </div>
-                                                        {student.name}
-                                                    </div>
+                                                    {student.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
