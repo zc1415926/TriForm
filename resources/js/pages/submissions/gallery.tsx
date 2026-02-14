@@ -73,6 +73,11 @@ type SortField = 'created_at' | 'score' | 'file_name';
 export default function SubmissionGallery() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    // 分页状态
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
     // 筛选和搜索状态
     const [years, setYears] = useState<string[]>([]);
@@ -102,9 +107,28 @@ export default function SubmissionGallery() {
         loadYears();
     }, []);
 
-    // 加载作品
+    // 滚动监听 - 无限滚动
     useEffect(() => {
-        loadSubmissions();
+        const handleScroll = () => {
+            // 检查是否滚动到底部（距离底部 100px 时触发加载）
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = window.innerHeight;
+
+            if (scrollTop + clientHeight >= scrollHeight - 100) {
+                loadMore();
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [page, hasMore, loadingMore, selectedYear, sortField, sortDirection]);
+
+    // 加载作品（筛选条件变化时重置分页）
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+        loadSubmissions(1, true);
     }, [selectedYear, sortField, sortDirection]);
 
     const loadYears = async () => {
@@ -118,28 +142,54 @@ export default function SubmissionGallery() {
         }
     };
 
-    const loadSubmissions = async () => {
-        setLoading(true);
+    const loadSubmissions = async (pageNum: number = 1, reset: boolean = false) => {
+        if (pageNum === 1) {
+            setLoading(true);
+        } else {
+            setLoadingMore(true);
+        }
+
         try {
             const params = new URLSearchParams();
             if (selectedYear !== 'all') params.append('year', selectedYear);
             if (searchQuery) params.append('search', searchQuery);
             params.append('sort', sortField);
             params.append('direction', sortDirection);
+            params.append('page', pageNum.toString());
+            params.append('per_page', '20');
 
             const response = await axios.get(`/api/submissions/all?${params.toString()}`);
-            setSubmissions(response.data);
+            const { data, meta } = response.data;
+
+            if (reset || pageNum === 1) {
+                setSubmissions(data);
+            } else {
+                setSubmissions(prev => [...prev, ...data]);
+            }
+
+            setHasMore(meta.has_more);
+            setPage(meta.current_page);
         } catch (error) {
             console.error('加载作品失败:', error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    // 加载更多
+    const loadMore = () => {
+        if (!loadingMore && hasMore) {
+            loadSubmissions(page + 1);
         }
     };
 
     // 处理搜索
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        loadSubmissions();
+        setPage(1);
+        setHasMore(true);
+        loadSubmissions(1, true);
     };
 
     // 处理排序
@@ -563,6 +613,22 @@ export default function SubmissionGallery() {
                                 </CardContent>
                             </Card>
                         ))}
+                    </div>
+                )}
+
+                {/* 加载更多提示 */}
+                {loadingMore && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            加载更多...
+                        </div>
+                    </div>
+                )}
+
+                {!hasMore && submissions.length > 0 && (
+                    <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+                        已经加载全部 {submissions.length} 条作品
                     </div>
                 )}
             </div>

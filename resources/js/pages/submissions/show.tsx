@@ -159,7 +159,7 @@ export default function SubmissionShow() {
 
                 // 加载第一个课时的所有提交记录和作业列表
                 const submissionsRes = await axios.get('/api/submissions/all');
-                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                const filteredSubmissions = submissionsRes.data.data.filter((s: Submission) =>
                     s.assignment.lesson_id === lessonsData[0].id
                 );
                 setSubmissions(filteredSubmissions);
@@ -198,7 +198,7 @@ export default function SubmissionShow() {
 
                 // 加载第一个课时的所有提交记录和作业列表
                 const submissionsRes = await axios.get('/api/submissions/all');
-                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                const filteredSubmissions = submissionsRes.data.data.filter((s: Submission) =>
                     s.assignment.lesson_id === lessonsData[0].id
                 );
                 setSubmissions(filteredSubmissions);
@@ -226,7 +226,7 @@ export default function SubmissionShow() {
             const submissionsRes = await axios.get('/api/submissions/all');
 
             // 加载该课时的提交记录和作业列表
-            const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+            const filteredSubmissions = submissionsRes.data.data.filter((s: Submission) =>
                 s.assignment.lesson_id === parseInt(lessonId)
             );
             setSubmissions(filteredSubmissions);
@@ -252,7 +252,7 @@ export default function SubmissionShow() {
             try {
                 const submissionsRes = await axios.get('/api/submissions/all');
                 // 过滤出该课时的提交
-                const filteredSubmissions = submissionsRes.data.filter((s: Submission) =>
+                const filteredSubmissions = submissionsRes.data.data.filter((s: Submission) =>
                     s.assignment.lesson_id === parseInt(selectedLesson)
                 );
                 setSubmissions(filteredSubmissions);
@@ -284,8 +284,13 @@ export default function SubmissionShow() {
     };
 
     // 下载文件
-    const handleDownload = (filePath: string) => {
-        window.open(`/storage/${filePath}`, '_blank');
+    const handleDownload = (filePath: string, fileName: string) => {
+        const link = document.createElement('a');
+        link.href = `/storage/${filePath}`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // 查看3D模型
@@ -501,7 +506,7 @@ export default function SubmissionShow() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => handleDownload(submission.file_path)}
+                                                            onClick={() => handleDownload(submission.file_path, submission.file_name)}
                                                         >
                                                             下载
                                                         </Button>

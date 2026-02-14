@@ -82,24 +82,22 @@ class SubmissionController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $submissions = $query->get();
+        // 分页
+        $perPage = $request->query('per_page', 20);
+        $page = $request->query('page', 1);
 
-        return response()->json($submissions->map(function ($submission) {
-            return [
-                'id' => $submission->id,
-                'student_id' => $submission->student_id,
-                'assignment_id' => $submission->assignment_id,
-                'file_path' => $submission->file_path,
-                'file_name' => $submission->file_name,
-                'file_size' => $submission->file_size,
-                'preview_image_path' => $submission->preview_image_path,
-                'status' => $submission->status,
-                'score' => $submission->score,
-                'created_at' => $submission->created_at,
-                'student' => $submission->student,
-                'assignment' => $submission->assignment,
-            ];
-        }));
+        $paginated = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+                'has_more' => $paginated->hasMorePages(),
+            ],
+        ]);
     }
 
     public function getStudentsByYear(Request $request): \Illuminate\Http\JsonResponse
