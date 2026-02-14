@@ -44,15 +44,45 @@ class SubmissionController extends Controller
         return Inertia::render('submissions/gallery');
     }
 
-    public function getAllSubmissions(): \Illuminate\Http\JsonResponse
+    public function getAllSubmissions(Request $request): \Illuminate\Http\JsonResponse
     {
-        $submissions = Submission::with([
+        $query = Submission::with([
             'student:id,name,year',
             'assignment:id,name,lesson_id',
             'assignment.lesson:id,name',
-        ])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        ]);
+
+        // 年份筛选
+        if ($request->has('year') && $request->query('year') !== 'all') {
+            $query->whereHas('student', function ($q) use ($request): void {
+                $q->where('year', $request->query('year'));
+            });
+        }
+
+        // 学生姓名搜索
+        if ($request->has('search') && $request->query('search')) {
+            $search = $request->query('search');
+            $query->whereHas('student', function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        // 排序
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('direction', 'desc');
+
+        $allowedSortFields = ['created_at', 'score', 'file_name'];
+        if (in_array($sortField, $allowedSortFields)) {
+            // 分数排序时，将 null 放在最后
+            if ($sortField === 'score') {
+                $query->orderByRaw('CASE WHEN score IS NULL THEN 1 ELSE 0 END');
+            }
+            $query->orderBy($sortField, $sortDirection === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $submissions = $query->get();
 
         return response()->json($submissions->map(function ($submission) {
             return [

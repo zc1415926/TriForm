@@ -13,12 +13,18 @@ Route::get('dashboard', function () {
 })->name('dashboard');
 
 Route::resource('students', StudentController::class);
+Route::get('students/template/download', [StudentController::class, 'downloadTemplate'])->name('students.template.download');
+Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+Route::get('students/export/all', [StudentController::class, 'export'])->name('students.export');
 
 Route::resource('upload-types', \App\Http\Controllers\UploadTypeController::class);
 
 Route::resource('assignments', \App\Http\Controllers\AssignmentController::class);
 
 Route::resource('lessons', \App\Http\Controllers\LessonController::class);
+Route::post('lessons/{lesson}/duplicate', [\App\Http\Controllers\LessonController::class, 'duplicate'])->name('lessons.duplicate');
+Route::get('lessons/{lesson}/export', [\App\Http\Controllers\LessonController::class, 'export'])->name('lessons.export');
+Route::post('lessons/import', [\App\Http\Controllers\LessonController::class, 'import'])->name('lessons.import');
 
 Route::post('api/upload/ckeditor-image', [\App\Http\Controllers\UploadController::class, 'ckeditorImage']);
 Route::post('api/upload/move-lesson-images', [\App\Http\Controllers\UploadController::class, 'moveLessonImages']);

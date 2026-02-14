@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Services\StudentExportService;
+use App\Services\StudentImportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -185,5 +187,63 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('students.index')->with('success', '学生删除成功');
+    }
+
+    /**
+     * 下载导入模板
+     */
+    public function downloadTemplate(StudentImportService $importService): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return $importService->generateTemplateStream();
+    }
+
+    /**
+     * 导入学生
+     */
+    public function import(Request $request, StudentImportService $importService): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        ], [
+            'file.required' => '请选择要导入的文件',
+            'file.mimes' => '文件格式必须是 Excel (.xlsx 或 .xls)',
+            'file.max' => '文件大小不能超过 5MB',
+        ]);
+
+        $result = $importService->import($request->file('file'));
+
+        $message = "导入完成：成功 {$result['success']} 条，失败 {$result['failed']} 条";
+
+        if (! empty($result['errors'])) {
+            $message .= "\n".implode("\n", array_slice($result['errors'], 0, 5));
+            if (count($result['errors']) > 5) {
+                $message .= '\n... 还有 '.(count($result['errors']) - 5).' 条错误';
+            }
+        }
+
+        return redirect()
+            ->route('students.index')
+            ->with($result['failed'] > 0 ? 'error' : 'success', $message);
+    }
+
+    /**
+     * 导出学生
+     */
+    public function export(Request $request, StudentExportService $exportService): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $selectedYear = $request->query('year');
+
+        $query = Student::query()->with('submissions');
+
+        if ($selectedYear && $selectedYear !== 'all') {
+            $query->where('year', $selectedYear);
+        }
+
+        $students = $query->latest()->get();
+
+        $yearSuffix = $selectedYear && $selectedYear !== 'all' ? "_{$selectedYear}" : '';
+        $filename = "学生列表{$yearSuffix}.xlsx";
+
+        return $exportService->exportStream($students, $filename);
     }
 }

@@ -220,11 +220,7 @@ export default function RichTextEditor({ content, onChange, year, lessonId }: Ri
             if (response.ok) {
                 const data = await response.json();
                 // 插入附件链接到编辑器
-                const linkHtml = `<a href="${data.url}" target="_blank" download class="inline-flex items-center gap-2 px-3 py-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors no-underline">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span class="text-sm font-medium">${data.original_name}</span>
-                    <span class="text-xs text-muted-foreground">(${data.size})</span>
-                </a>`;
+                const linkHtml = `<a href="${data.url}" target="_blank" download class="inline-flex items-center gap-2 px-3 py-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors no-underline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><span class="text-sm font-medium">${data.original_name}</span><span class="text-xs text-muted-foreground">(${data.size})</span></a>`;
                 editor.chain().focus().insertContent(linkHtml).run();
             } else {
                 console.error('文件上传失败, status:', response.status);

@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Filter, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, Eye, FileUp, Filter, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -227,6 +227,52 @@ export default function StudentIndex() {
         }
     };
 
+    // 导入相关
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // 下载模板
+    const handleDownloadTemplate = () => {
+        window.location.href = route('students.template.download');
+    };
+
+    // 导出
+    const handleExport = () => {
+        const yearParam = filterYear && filterYear !== 'all' ? `?year=${filterYear}` : '';
+        window.location.href = route('students.export') + yearParam;
+    };
+
+    // 打开导入模态框
+    const openImportModal = () => {
+        setImportFile(null);
+        setIsImportModalOpen(true);
+    };
+
+    // 选择文件
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImportFile(file);
+        }
+    };
+
+    // 提交导入
+    const handleImportSubmit = () => {
+        if (!importFile) return;
+
+        const formData = new FormData();
+        formData.append('file', importFile);
+
+        router.post(route('students.import'), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setIsImportModalOpen(false);
+                setImportFile(null);
+            },
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="学生管理" />
@@ -268,6 +314,38 @@ export default function StudentIndex() {
                                 </Button>
                             )}
                         </div>
+
+                        {/* 导入导出按钮组 */}
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDownloadTemplate}
+                                title="下载导入模板"
+                            >
+                                <Download className="mr-2 size-4" />
+                                下载模板
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={openImportModal}
+                                title="导入学生"
+                            >
+                                <Upload className="mr-2 size-4" />
+                                导入
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExport}
+                                title="导出学生"
+                            >
+                                <FileUp className="mr-2 size-4" />
+                                导出
+                            </Button>
+                        </div>
+
                         <Button onClick={openCreateModal}>
                             <Plus className="mr-2 size-4" />
                             添加学生
@@ -639,6 +717,78 @@ export default function StudentIndex() {
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
                             删除
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* 导入模态框 */}
+            <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>导入学生</DialogTitle>
+                        <DialogDescription>
+                            请先下载模板文件，按模板格式填写数据后上传。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="rounded-lg border bg-muted/50 p-4">
+                            <h4 className="mb-2 font-medium">导入说明：</h4>
+                            <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                                <li>请使用下载的模板文件填写数据</li>
+                                <li>年级：1-6 分别对应一至六年级</li>
+                                <li>班级：1-20 之间的数字</li>
+                                <li>年份：入学年份，如 2024</li>
+                                <li>请勿修改表头，从第 2 行开始填写</li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">选择文件</label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".xlsx,.xls"
+                                    className="hidden"
+                                    onChange={handleFileSelect}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full"
+                                >
+                                    {importFile ? importFile.name : '点击选择 Excel 文件'}
+                                </Button>
+                            </div>
+                            {importFile && (
+                                <p className="text-xs text-muted-foreground">
+                                    文件大小：{(importFile.size / 1024).toFixed(1)} KB
+                                </p>
+                            )}
+                        </div>
+
+                        {errors.file && (
+                            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                                {errors.file}
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsImportModalOpen(false)}
+                        >
+                            取消
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleImportSubmit}
+                            disabled={!importFile || processing}
+                        >
+                            {processing ? '导入中...' : '开始导入'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
