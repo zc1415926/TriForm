@@ -437,24 +437,6 @@ export default function SubmissionIndex() {
                     </CardHeader>
                     <CardContent className="p-6">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* 步骤指示器 */}
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${students.length > 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-sm font-bold">1</div>
-                                    <span className="text-sm font-medium">选择年份</span>
-                                </div>
-                                <div className="flex-1 h-px bg-gray-200" />
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${data.student_id ? 'bg-green-100 text-green-700' : students.length > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
-                                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-sm font-bold">2</div>
-                                    <span className="text-sm font-medium">选择学生</span>
-                                </div>
-                                <div className="flex-1 h-px bg-gray-200" />
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${assignments.length > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
-                                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-sm font-bold">3</div>
-                                    <span className="text-sm font-medium">上传作品</span>
-                                </div>
-                            </div>
-
                             {/* 年份选择 */}
                             <div className="space-y-3">
                                 <Label htmlFor="year" className="flex items-center gap-2 text-base">
