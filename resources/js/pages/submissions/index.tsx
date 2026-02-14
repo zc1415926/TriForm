@@ -593,7 +593,6 @@ export default function SubmissionIndex() {
 
                                                         <div className="space-y-3">
                                                             <Label className="flex items-center gap-2">
-                                                                <Upload className="w-4 h-4 text-blue-500" />
                                                                 上传文件
                                                             </Label>
                                                             <div className="relative">
