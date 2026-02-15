@@ -188,9 +188,21 @@ class StudentController extends Controller
 
     public function destroy(Student $student): RedirectResponse
     {
-        $student->delete();
+        try {
+            \DB::transaction(function () use ($student): void {
+                // 删除头像文件
+                if ($student->avatar) {
+                    Storage::disk('public')->delete($student->avatar);
+                }
 
-        return redirect()->route('students.index')->with('success', '学生删除成功');
+                // 删除学生记录
+                $student->delete();
+            });
+
+            return redirect()->route('students.index')->with('success', '学生删除成功');
+        } catch (\Exception $e) {
+            return redirect()->route('students.index')->with('error', '删除失败：'.$e->getMessage());
+        }
     }
 
     /**

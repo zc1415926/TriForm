@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Submission extends Model
 {
+    /** @use HasFactory<\Database\Factories\SubmissionFactory> */
     use HasFactory;
 
     protected $fillable = [
