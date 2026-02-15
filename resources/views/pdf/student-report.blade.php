@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $student->name }} - 成绩报告</title>
     <style>
+        @page {
+            margin: 15mm 15mm 20mm 15mm;
+            size: A4;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -12,173 +17,167 @@
         }
         
         body {
-            font-family: 'SimSun', 'Microsoft YaHei', sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
+            font-family: 'Microsoft YaHei', 'SimSun', sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: white;
         }
         
         .container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 180mm;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
         }
         
+        /* 头部区域 */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .header-title {
             text-align: center;
-            position: relative;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.5;
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
-        .header .subtitle {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .student-info {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 30px 40px;
-            border-bottom: 3px solid #667eea;
-        }
-        
-        .student-info h2 {
-            font-size: 28px;
-            color: #333;
             margin-bottom: 15px;
         }
         
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .info-item {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .info-item .label {
-            font-size: 12px;
-            color: #666;
+        .header-title h1 {
+            font-size: 24px;
             margin-bottom: 5px;
         }
         
-        .info-item .value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
+        .header-title .subtitle {
+            font-size: 12px;
+            opacity: 0.9;
         }
         
+        /* 学生信息卡片 */
+        .student-card {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .student-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #667eea;
+            flex-shrink: 0;
+        }
+        
+        .student-avatar-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            border: 3px solid white;
+            flex-shrink: 0;
+        }
+        
+        .student-details {
+            flex: 1;
+        }
+        
+        .student-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .student-meta {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .student-meta span {
+            margin-right: 15px;
+        }
+        
+        /* 统计卡片 */
         .stats-section {
-            padding: 40px;
+            margin-bottom: 15px;
         }
         
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
+            gap: 10px;
         }
         
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px;
-            border-radius: 15px;
+            padding: 12px 8px;
+            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
         .stat-card .number {
-            font-size: 32px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .stat-card .label {
-            font-size: 14px;
+            font-size: 11px;
             opacity: 0.9;
         }
         
+        /* 成绩分布 */
+        .grade-section {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        
         .section-title {
-            font-size: 20px;
+            font-size: 14px;
             color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: bold;
         }
         
         .grade-distribution {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
         }
         
         .grade-item {
-            flex: 1;
-            min-width: 100px;
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
+            padding: 12px 5px;
+            border-radius: 8px;
             text-align: center;
-            transition: all 0.3s;
         }
         
-        .grade-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        
-        .grade-item.g { border-color: #10b981; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); }
-        .grade-item.a { border-color: #3b82f6; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
-        .grade-item.b { border-color: #f59e0b; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
-        .grade-item.c { border-color: #f97316; background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); }
-        .grade-item.o { border-color: #ef4444; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+        .grade-item.g { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); }
+        .grade-item.a { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
+        .grade-item.b { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+        .grade-item.c { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); }
+        .grade-item.o { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
         
         .grade-item .grade {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .grade-item.g .grade { color: #059669; }
@@ -188,49 +187,79 @@
         .grade-item.o .grade { color: #dc2626; }
         
         .grade-item .count {
-            font-size: 24px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
         }
         
         .grade-item .unit {
-            font-size: 14px;
+            font-size: 11px;
             color: #666;
+        }
+        
+        /* 作业列表表格 */
+        .submissions-section {
+            margin-bottom: 15px;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 11px;
         }
         
         th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px;
+            padding: 10px 8px;
             text-align: left;
             font-weight: 600;
+            font-size: 11px;
         }
         
         td {
-            padding: 15px;
+            padding: 8px;
             border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
         }
         
-        tr:hover {
+        tr:nth-child(even) {
             background: #f8f9fa;
+        }
+        
+        /* 截图列 */
+        .screenshot-cell {
+            width: 80px;
+            padding: 5px;
+        }
+        
+        .screenshot-img {
+            width: 70px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .screenshot-placeholder {
+            width: 70px;
+            height: 50px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 10px;
+            border: 1px solid #ddd;
         }
         
         .score-badge {
             display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
+            padding: 3px 10px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
         }
         
         .score-badge.score-12 { background: #d1fae5; color: #059669; }
@@ -240,50 +269,57 @@
         .score-badge.score-0 { background: #fee2e2; color: #dc2626; }
         .score-badge.score-null { background: #f3f4f6; color: #9ca3af; }
         
+        /* 页脚 */
         .footer {
-            background: #f8f9fa;
-            padding: 20px 40px;
             text-align: center;
             color: #666;
-            font-size: 12px;
+            font-size: 10px;
+            padding-top: 15px;
             border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
         }
         
+        /* 分页控制 */
         .page-break {
             page-break-after: always;
+        }
+        
+        .avoid-break {
+            page-break-inside: avoid;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
+        <!-- 头部区域 -->
         <div class="header">
-            <div class="header-content">
+            <div class="header-title">
                 <h1>🏆 学生成绩报告</h1>
-                <p class="subtitle">Student Achievement Report</p>
+                <div class="subtitle">Student Achievement Report</div>
+            </div>
+            
+            <!-- 学生信息卡片：头像 + 信息 -->
+            <div class="student-card">
+                @if($student->avatar)
+                    <img src="{{ public_path('storage/' . $student->avatar) }}" alt="{{ $student->name }}" class="student-avatar">
+                @else
+                    <div class="student-avatar-placeholder">
+                        {{ mb_substr($student->name, 0, 1) }}
+                    </div>
+                @endif
+                
+                <div class="student-details">
+                    <div class="student-name">{{ $student->name }}</div>
+                    <div class="student-meta">
+                        <span>📚 {{ $student->grade_text }}</span>
+                        <span>🏫 {{ $student->class }}班</span>
+                        <span>📅 {{ $student->year }}年入学</span>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- 学生信息 -->
-        <div class="student-info">
-            <h2>{{ $student->name }}</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="label">年级</div>
-                    <div class="value">{{ $student->grade_text }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="label">班级</div>
-                    <div class="value">{{ $student->class }}班</div>
-                </div>
-                <div class="info-item">
-                    <div class="label">入学年份</div>
-                    <div class="value">{{ $student->year }}年</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 统计数据 -->
+        <!-- 统计卡片 -->
         <div class="stats-section">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -303,9 +339,11 @@
                     <div class="label">提交数</div>
                 </div>
             </div>
-            
-            <!-- 成绩分布 -->
-            <h3 class="section-title">📊 成绩等级分布</h3>
+        </div>
+        
+        <!-- 成绩分布 -->
+        <div class="grade-section avoid-break">
+            <div class="section-title">📊 成绩等级分布</div>
             <div class="grade-distribution">
                 <div class="grade-item g">
                     <div class="grade">G</div>
@@ -333,25 +371,33 @@
                     <div class="unit">份</div>
                 </div>
             </div>
-            
-            <!-- 作业列表 -->
-            <h3 class="section-title">📝 作业提交记录</h3>
+        </div>
+        
+        <!-- 作业列表 -->
+        <div class="submissions-section">
+            <div class="section-title">📝 作业提交记录</div>
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 80px;">截图</th>
                         <th>作业名称</th>
                         <th>课时</th>
-                        <th>文件名</th>
                         <th>分数</th>
                         <th>提交时间</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($submissions as $submission)
-                    <tr>
+                    <tr class="avoid-break">
+                        <td class="screenshot-cell">
+                            @if($submission->preview_image_path)
+                                <img src="{{ public_path('storage/' . $submission->preview_image_path) }}" alt="截图" class="screenshot-img">
+                            @else
+                                <div class="screenshot-placeholder">无截图</div>
+                            @endif
+                        </td>
                         <td>{{ $submission->assignment?->name ?? '未知作业' }}</td>
                         <td>{{ $submission->assignment?->lesson?->name ?? '未知课时' }}</td>
-                        <td>{{ $submission->file_name }}</td>
                         <td>
                             @if($submission->score !== null)
                                 <span class="score-badge score-{{ $submission->score }}">
