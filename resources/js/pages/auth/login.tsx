@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { GraduationCap, Lock, Mail, Sparkles } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,10 @@ export default function Login({
 }: Props) {
     return (
         <AuthLayout
-            title="Log in to your account"
-            description="Enter your email and password below to log in"
+            title="欢迎回来"
+            description="请输入您的邮箱和密码登录系统"
         >
-            <Head title="Log in" />
+            <Head title="登录" />
 
             <Form
                 {...store()}
@@ -39,7 +40,10 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email" className="text-gray-700 font-medium flex items-center gap-2">
+                                    <Mail className="w-4 h-4 text-gray-400" />
+                                    邮箱地址
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -48,21 +52,25 @@ export default function Login({
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    placeholder="请输入邮箱地址"
+                                    className="rounded-xl h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password" className="text-gray-700 font-medium flex items-center gap-2">
+                                        <Lock className="w-4 h-4 text-gray-400" />
+                                        密码
+                                    </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            忘记密码？
                                         </TextLink>
                                     )}
                                 </div>
@@ -73,7 +81,8 @@ export default function Login({
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder="请输入密码"
+                                    className="rounded-xl h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -83,27 +92,29 @@ export default function Login({
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
+                                    className="rounded border-gray-300"
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label htmlFor="remember" className="text-gray-600">记住我</Label>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-4 w-full rounded-xl h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Log in
+                                <GraduationCap className="w-5 h-5 mr-2" />
+                                登录
                             </Button>
                         </div>
 
                         {canRegister && (
-                            <div className="text-center text-sm text-muted-foreground">
-                                Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
-                                    Sign up
+                            <div className="text-center text-sm text-gray-500">
+                                还没有账号？{' '}
+                                <TextLink href={register()} tabIndex={5} className="font-medium">
+                                    立即注册
                                 </TextLink>
                             </div>
                         )}
@@ -112,8 +123,11 @@ export default function Login({
             </Form>
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
+                <div className="mb-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-green-600" />
+                    </div>
+                    <span className="text-green-800 font-medium text-sm">{status}</span>
                 </div>
             )}
         </AuthLayout>
