@@ -28,6 +28,9 @@ Route::prefix('submissions')->name('api.submissions.')->group(function () {
 Route::middleware(['auth'])->prefix('submissions')->name('api.submissions.')->group(function () {
     Route::post('/score', [SubmissionController::class, 'updateScore'])->name('score');
     Route::post('/cancel-score', [SubmissionController::class, 'cancelScore'])->name('cancel-score');
+    Route::post('/batch-score', [SubmissionController::class, 'batchScore'])->name('batch-score');
+    Route::get('/student-report/{studentId}', [SubmissionController::class, 'studentReport'])->name('student-report');
+    Route::get('/class-report', [SubmissionController::class, 'classReport'])->name('class-report');
     Route::delete('/{id}', [SubmissionController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/preview', [SubmissionController::class, 'uploadPreview'])->name('upload-preview');
 });

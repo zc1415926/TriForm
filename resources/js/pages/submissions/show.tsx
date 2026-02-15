@@ -100,6 +100,11 @@ export default function SubmissionShow() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(false);
 
+    // 批量评分状态
+    const [selectedSubmissions, setSelectedSubmissions] = useState<number[]>([]);
+    const [batchGradingMode, setBatchGradingMode] = useState(false);
+    const [batchGradeDialogOpen, setBatchGradeDialogOpen] = useState(false);
+
     // 预览图模态框状态
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImageUrl, setPreviewImageUrl] = useState('');
@@ -450,6 +455,56 @@ export default function SubmissionShow() {
         }
     };
 
+    // 批量评分处理
+    const handleBatchScore = async (grade: 'G' | 'A' | 'B' | 'C' | 'O') => {
+        if (selectedSubmissions.length === 0) {
+            alert('请先选择要评分的作品');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await axios.post('/api/submissions/batch-score', {
+                submission_ids: selectedSubmissions,
+                grade,
+            });
+
+            // 更新本地状态
+            const gradeScores: Record<string, number> = { G: 12, A: 10, B: 8, C: 6, O: 0 };
+            const score = gradeScores[grade];
+            const updatedSubmissions = submissions.map((s) =>
+                selectedSubmissions.includes(s.id) ? { ...s, score } : s
+            );
+            setSubmissions(updatedSubmissions);
+            setSelectedSubmissions([]);
+            setBatchGradingMode(false);
+            setBatchGradeDialogOpen(false);
+
+            alert(`批量评分成功：${response.data.message}`);
+        } catch (error) {
+            console.error('批量评分失败:', error);
+            alert('批量评分失败');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 切换作品选择
+    const toggleSubmissionSelection = (id: number) => {
+        setSelectedSubmissions(prev =>
+            prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+        );
+    };
+
+    // 全选/取消全选
+    const toggleSelectAll = () => {
+        if (selectedSubmissions.length === submissions.length) {
+            setSelectedSubmissions([]);
+        } else {
+            setSelectedSubmissions(submissions.map(s => s.id));
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="查看作品" />
@@ -561,7 +616,7 @@ export default function SubmissionShow() {
                 {selectedYear && selectedLesson && (
                     <Card className="border-0 shadow-lg overflow-hidden">
                         <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center">
                                         <FileText className="w-5 h-5 text-white" />
@@ -570,8 +625,56 @@ export default function SubmissionShow() {
                                         <CardTitle>提交记录</CardTitle>
                                         <p className="text-sm text-muted-foreground mt-1">
                                             共 {submissions.length} 条记录
+                                            {selectedSubmissions.length > 0 && (
+                                                <span className="ml-2 text-indigo-600 font-medium">
+                                                    (已选择 {selectedSubmissions.length} 个)
+                                                </span>
+                                            )}
                                         </p>
                                     </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {!batchGradingMode ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setBatchGradingMode(true)}
+                                            className="rounded-lg border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+                                        >
+                                            批量评分
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={toggleSelectAll}
+                                                className="rounded-lg"
+                                            >
+                                                {selectedSubmissions.length === submissions.length ? '取消全选' : '全选'}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setBatchGradeDialogOpen(true)}
+                                                disabled={selectedSubmissions.length === 0}
+                                                className="rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 border-0 disabled:opacity-50"
+                                            >
+                                                批量评分 ({selectedSubmissions.length})
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setBatchGradingMode(false);
+                                                    setSelectedSubmissions([]);
+                                                }}
+                                                className="rounded-lg"
+                                            >
+                                                取消
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </CardHeader>
@@ -586,6 +689,16 @@ export default function SubmissionShow() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
+                                                {batchGradingMode && (
+                                                    <TableHead className="w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedSubmissions.length === submissions.length && submissions.length > 0}
+                                                            onChange={toggleSelectAll}
+                                                            className="rounded border-gray-300"
+                                                        />
+                                                    </TableHead>
+                                                )}
                                                 <TableHead className="font-semibold text-gray-700">学生姓名</TableHead>
                                                 <TableHead className="font-semibold text-gray-700">文件名</TableHead>
                                                 <TableHead className="font-semibold text-gray-700">文件大小</TableHead>
@@ -598,6 +711,16 @@ export default function SubmissionShow() {
                                         <TableBody>
                                             {submissions.map((submission) => (
                                                 <TableRow key={submission.id} className="hover:bg-blue-50/30 transition-colors">
+                                                    {batchGradingMode && (
+                                                        <TableCell>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedSubmissions.includes(submission.id)}
+                                                                onChange={() => toggleSubmissionSelection(submission.id)}
+                                                                className="rounded border-gray-300"
+                                                            />
+                                                        </TableCell>
+                                                    )}
                                                     <TableCell className="font-medium">{submission.student.name}</TableCell>
                                                     <TableCell className="text-gray-600">{submission.file_name}</TableCell>
                                                     <TableCell className="text-gray-500">{formatFileSize(submission.file_size)}</TableCell>
@@ -1223,13 +1346,51 @@ export default function SubmissionShow() {
                         <Button variant="outline" onClick={handleDeleteCancel} disabled={isDeleting} className="rounded-xl px-6">
                             取消
                         </Button>
-                        <Button 
-                            variant="destructive" 
-                            onClick={handleDeleteConfirm} 
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteConfirm}
                             disabled={isDeleting}
                             className="rounded-xl px-6 bg-gradient-to-r from-red-500 to-red-600"
                         >
                             {isDeleting ? '删除中...' : '确认删除'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* 批量评分对话框 */}
+            <Dialog open={batchGradeDialogOpen} onOpenChange={setBatchGradeDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader className="text-center pb-4">
+                        <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+                            <Award className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <DialogTitle className="text-xl">批量评分</DialogTitle>
+                        <DialogDescription className="text-center">
+                            已为 {selectedSubmissions.length} 个作品选择评分等级
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 space-y-2">
+                        {[
+                            { grade: 'G', score: 12, label: 'G (12分)', color: 'from-emerald-500 to-emerald-600' },
+                            { grade: 'A', score: 10, label: 'A (10分)', color: 'from-blue-500 to-blue-600' },
+                            { grade: 'B', score: 8, label: 'B (8分)', color: 'from-amber-500 to-amber-600' },
+                            { grade: 'C', score: 6, label: 'C (6分)', color: 'from-orange-500 to-orange-600' },
+                            { grade: 'O', score: 0, label: 'O (0分)', color: 'from-red-500 to-red-600' },
+                        ].map(({ grade, label, color }) => (
+                            <Button
+                                key={grade}
+                                onClick={() => handleBatchScore(grade as 'G' | 'A' | 'B' | 'C' | 'O')}
+                                disabled={loading}
+                                className={`w-full rounded-xl bg-gradient-to-r ${color} text-white hover:opacity-90`}
+                            >
+                                {label}
+                            </Button>
+                        ))}
+                    </div>
+                    <div className="flex justify-center mt-4">
+                        <Button variant="outline" onClick={() => setBatchGradeDialogOpen(false)} disabled={loading} className="rounded-xl px-6">
+                            取消
                         </Button>
                     </div>
                 </DialogContent>

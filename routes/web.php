@@ -26,6 +26,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('students/template/download', [StudentController::class, 'downloadTemplate'])->name('students.template.download');
     Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
     Route::get('students/export/all', [StudentController::class, 'export'])->name('students.export');
+    Route::inertia('students/report', 'students/report')->name('students.report');
+    Route::inertia('students/class-report', 'students/class-report')->name('students.class-report');
 
     // 课时管理
     Route::resource('lessons', LessonController::class);

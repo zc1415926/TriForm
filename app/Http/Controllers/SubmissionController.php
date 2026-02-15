@@ -353,6 +353,199 @@ class SubmissionController extends Controller
         ]);
     }
 
+    /**
+     * 批量评分
+     */
+    public function batchScore(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'submission_ids' => 'required|array|min:1',
+            'submission_ids.*' => 'required|exists:submissions,id',
+            'grade' => 'required|in:G,A,B,C,O',
+        ]);
+
+        // 等级转分数映射
+        $gradeScores = [
+            'G' => 12,
+            'A' => 10,
+            'B' => 8,
+            'C' => 6,
+            'O' => 0,
+        ];
+
+        $score = $gradeScores[$validated['grade']];
+
+        try {
+            $count = Submission::whereIn('id', $validated['submission_ids'])
+                ->update(['score' => $score]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "成功评分 {$count} 个作品",
+                'count' => $count,
+                'grade' => $validated['grade'],
+                'score' => $score,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '批量评分失败：'.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * 获取学生成绩报告
+     */
+    public function studentReport(Request $request, string $studentId): \Illuminate\Http\JsonResponse
+    {
+        $student = \App\Models\Student::with([
+            'submissions' => function ($query): void {
+                $query->with(['assignment:id,name,lesson_id', 'assignment.lesson:id,name'])
+                    ->orderBy('created_at', 'desc');
+            },
+        ])->findOrFail($studentId);
+
+        $submissions = $student->submissions;
+        $totalSubmissions = $submissions->count();
+        $scoredSubmissions = $submissions->whereNotNull('score');
+        $totalScore = $scoredSubmissions->sum('score');
+        $scoredCount = $scoredSubmissions->count();
+        $avgScore = $scoredCount > 0 ? round($totalScore / $scoredCount, 2) : 0;
+
+        // 计算完成率
+        $totalAssignments = \App\Models\Assignment::whereHas('lesson', function ($q) use ($student): void {
+            $q->where('year', $student->year);
+        })->count();
+        $completionRate = $totalAssignments > 0
+            ? round(($totalSubmissions / $totalAssignments) * 100, 1)
+            : 0;
+
+        // 成绩分布
+        $gradeDistribution = [
+            'G' => $scoredSubmissions->where('score', 12)->count(),
+            'A' => $scoredSubmissions->where('score', 10)->count(),
+            'B' => $scoredSubmissions->where('score', 8)->count(),
+            'C' => $scoredSubmissions->where('score', 6)->count(),
+            'O' => $scoredSubmissions->where('score', 0)->count(),
+        ];
+
+        return response()->json([
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'grade_text' => $student->grade_text,
+                'class' => $student->class,
+                'year' => $student->year,
+            ],
+            'statistics' => [
+                'total_submissions' => $totalSubmissions,
+                'scored_submissions' => $scoredCount,
+                'total_score' => $totalScore,
+                'average_score' => $avgScore,
+                'completion_rate' => $completionRate,
+                'total_assignments' => $totalAssignments,
+            ],
+            'grade_distribution' => $gradeDistribution,
+            'submissions' => $submissions->map(function ($submission): array {
+                return [
+                    'id' => $submission->id,
+                    'assignment_name' => $submission->assignment?->name ?? '未知作业',
+                    'lesson_name' => $submission->assignment?->lesson?->name ?? '未知课时',
+                    'file_name' => $submission->file_name,
+                    'score' => $submission->score,
+                    'created_at' => $submission->created_at->format('Y-m-d H:i'),
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * 获取班级成绩汇总
+     */
+    public function classReport(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'year' => 'required|integer',
+            'grade' => 'required|integer|min:1|max:6',
+            'class' => 'required|integer|min:1|max:20',
+        ]);
+
+        $students = \App\Models\Student::where('year', $validated['year'])
+            ->where('grade', $validated['grade'])
+            ->where('class', $validated['class'])
+            ->with(['submissions'])
+            ->get();
+
+        $totalStudents = $students->count();
+
+        if ($totalStudents === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => '该班级暂无学生',
+            ], 404);
+        }
+
+        // 计算每个学生的成绩
+        $studentReports = $students->map(function ($student): array {
+            $submissions = $student->submissions;
+            $scoredSubmissions = $submissions->whereNotNull('score');
+            $totalScore = $scoredSubmissions->sum('score');
+            $scoredCount = $scoredSubmissions->count();
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'total_submissions' => $submissions->count(),
+                'scored_submissions' => $scoredCount,
+                'total_score' => $totalScore,
+                'average_score' => $scoredCount > 0 ? round($totalScore / $scoredCount, 2) : 0,
+            ];
+        })->sortByDesc('total_score')->values();
+
+        // 添加排名
+        $studentReports = $studentReports->map(function ($report, $index): array {
+            $report['rank'] = $index + 1;
+
+            return $report;
+        });
+
+        // 班级统计
+        $totalSubmissions = $students->sum(function ($student): int {
+            return $student->submissions->count();
+        });
+
+        $totalScoredSubmissions = $students->sum(function ($student): int {
+            return $student->submissions->whereNotNull('score')->count();
+        });
+
+        $classTotalScore = $students->sum(function ($student): int {
+            return $student->submissions->whereNotNull('score')->sum('score');
+        });
+
+        $averageScore = $totalScoredSubmissions > 0
+            ? round($classTotalScore / $totalScoredSubmissions, 2)
+            : 0;
+
+        return response()->json([
+            'success' => true,
+            'class_info' => [
+                'year' => $validated['year'],
+                'grade' => $validated['grade'],
+                'class' => $validated['class'],
+                'total_students' => $totalStudents,
+            ],
+            'statistics' => [
+                'total_submissions' => $totalSubmissions,
+                'total_scored' => $totalScoredSubmissions,
+                'class_total_score' => $classTotalScore,
+                'class_average_score' => $averageScore,
+            ],
+            'students' => $studentReports,
+        ]);
+    }
+
     public function destroy(string $id): \Illuminate\Http\JsonResponse
     {
         try {

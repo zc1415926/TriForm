@@ -367,6 +367,28 @@ export default function StudentIndex() {
                                 <FileUp className="mr-2 size-4 text-purple-500" />
                                 导出
                             </Button>
+                            <Link href="/students/report">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    title="学生成绩报告"
+                                    className="rounded-lg border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                                >
+                                    <GraduationCap className="mr-2 size-4 text-amber-500" />
+                                    成绩报告
+                                </Button>
+                            </Link>
+                            <Link href="/students/class-report">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    title="班级成绩汇总"
+                                    className="rounded-lg border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                                >
+                                    <Users className="mr-2 size-4 text-indigo-500" />
+                                    班级汇总
+                                </Button>
+                            </Link>
                         </div>
 
                         <Button 
