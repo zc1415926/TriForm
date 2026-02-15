@@ -11,6 +11,8 @@
 /resources/js/wayfinder
 /vendor
 /VoxFileReader-master
+/playwright-report
+
 .DS_Store
 .env
 .env.backup
