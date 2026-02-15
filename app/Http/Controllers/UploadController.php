@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -10,7 +11,7 @@ class UploadController extends Controller
     /**
      * 上传 CKEditor 图片
      */
-    public function ckeditorImage(Request $request)
+    public function ckeditorImage(Request $request): JsonResponse
     {
         $request->validate([
             'upload' => 'required|image|max:10240', // 最大10MB
@@ -41,7 +42,7 @@ class UploadController extends Controller
     /**
      * 移动临时文件夹的图片到正确的文件夹
      */
-    public function moveLessonImages(Request $request)
+    public function moveLessonImages(Request $request): JsonResponse
     {
         $request->validate([
             'year' => 'required|string',
@@ -78,7 +79,7 @@ class UploadController extends Controller
     /**
      * 上传附件（非图片文件）
      */
-    public function attachment(Request $request)
+    public function attachment(Request $request): JsonResponse
     {
         $request->validate([
             'file' => 'required|file|max:51200', // 最大50MB

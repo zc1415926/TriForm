@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Services\StudentExportService;
 use App\Services\StudentImportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
-    public function index(Request $request): \Inertia\Response
+    public function index(Request $request): Response
     {
         $selectedYear = $request->query('year');
 
@@ -60,12 +64,12 @@ class StudentController extends Controller
         ]);
     }
 
-    public function create(): \Inertia\Response
+    public function create(): Response
     {
         return Inertia::render('students/create');
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -86,7 +90,7 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', '学生创建成功');
     }
 
-    public function show(Student $student): \Inertia\Response
+    public function show(Student $student): Response
     {
         $student->load(['submissions' => function ($query): void {
             $query->with('assignment')
@@ -141,14 +145,14 @@ class StudentController extends Controller
         return round($bytes / (1024 ** $unitIndex), 2).' '.$units[$unitIndex];
     }
 
-    public function edit(Student $student): \Inertia\Response
+    public function edit(Student $student): Response
     {
         return Inertia::render('students/edit', [
             'student' => $student,
         ]);
     }
 
-    public function update(Request $request, Student $student): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, Student $student): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -161,7 +165,7 @@ class StudentController extends Controller
 
         // 处理头像删除
         if (! empty($validated['remove_avatar']) && $student->avatar) {
-            \Storage::disk('public')->delete($student->avatar);
+            Storage::disk('public')->delete($student->avatar);
             $validated['avatar'] = null;
         }
 
@@ -169,7 +173,7 @@ class StudentController extends Controller
         if ($request->hasFile('avatar')) {
             // 删除旧头像
             if ($student->avatar) {
-                \Storage::disk('public')->delete($student->avatar);
+                Storage::disk('public')->delete($student->avatar);
             }
             $year = $validated['year'];
             $validated['avatar'] = $request->file('avatar')->store("avatars/students/{$year}", 'public');
@@ -182,7 +186,7 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', '学生更新成功');
     }
 
-    public function destroy(Student $student): \Illuminate\Http\RedirectResponse
+    public function destroy(Student $student): RedirectResponse
     {
         $student->delete();
 
@@ -192,7 +196,7 @@ class StudentController extends Controller
     /**
      * 下载导入模板
      */
-    public function downloadTemplate(StudentImportService $importService): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function downloadTemplate(StudentImportService $importService): StreamedResponse
     {
         return $importService->generateTemplateStream();
     }
@@ -200,7 +204,7 @@ class StudentController extends Controller
     /**
      * 导入学生
      */
-    public function import(Request $request, StudentImportService $importService): \Illuminate\Http\RedirectResponse
+    public function import(Request $request, StudentImportService $importService): RedirectResponse
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls|max:5120',
@@ -229,7 +233,7 @@ class StudentController extends Controller
     /**
      * 导出学生
      */
-    public function export(Request $request, StudentExportService $exportService): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export(Request $request, StudentExportService $exportService): StreamedResponse
     {
         $selectedYear = $request->query('year');
 

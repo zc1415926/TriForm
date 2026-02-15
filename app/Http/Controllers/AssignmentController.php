@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Assignment;
 use App\Models\UploadType;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class AssignmentController extends Controller
 {
-    public function index(): \Inertia\Response
+    public function index(): Response
     {
         $assignments = Assignment::with('uploadType')->latest()->get();
 
@@ -19,14 +21,14 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function create(): \Inertia\Response
+    public function create(): Response
     {
         return Inertia::render('assignments/create', [
             'uploadTypes' => UploadType::all(['id', 'name', 'description']),
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -41,7 +43,7 @@ class AssignmentController extends Controller
         return redirect()->route('assignments.index')->with('success', '作业创建成功');
     }
 
-    public function edit(Assignment $assignment): \Inertia\Response
+    public function edit(Assignment $assignment): Response
     {
         return Inertia::render('assignments/edit', [
             'assignment' => $assignment,
@@ -49,7 +51,7 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Assignment $assignment): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, Assignment $assignment): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -64,7 +66,7 @@ class AssignmentController extends Controller
         return redirect()->route('assignments.index')->with('success', '作业更新成功');
     }
 
-    public function destroy(Assignment $assignment): \Illuminate\Http\RedirectResponse
+    public function destroy(Assignment $assignment): RedirectResponse
     {
         $assignment->delete();
 
