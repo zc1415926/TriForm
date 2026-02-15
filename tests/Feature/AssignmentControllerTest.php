@@ -49,7 +49,7 @@ describe('AssignmentController', function () {
                 'is_published' => true,
             ];
 
-            $response = $this->withoutMiddleware()->post(route('assignments.store'), $data);
+            $response = $this->post(route('assignments.store'), $data);
 
             $response->assertRedirect(route('assignments.index'))
                 ->assertSessionHas('success', '作业创建成功');
@@ -58,13 +58,13 @@ describe('AssignmentController', function () {
         });
 
         test('validates required fields', function () {
-            $response = $this->withoutMiddleware()->post(route('assignments.store'), []);
+            $response = $this->post(route('assignments.store'), []);
 
             $response->assertSessionHasErrors(['name', 'upload_type_id', 'is_required', 'is_published']);
         });
 
         test('validates upload_type_id exists', function () {
-            $response = $this->withoutMiddleware()->post(route('assignments.store'), [
+            $response = $this->post(route('assignments.store'), [
                 'name' => '期末作品',
                 'upload_type_id' => 99999,
                 'is_required' => true,
@@ -88,7 +88,7 @@ describe('AssignmentController', function () {
                 'is_published' => false,
             ];
 
-            $response = $this->withoutMiddleware()->put(route('assignments.update', $assignment), $data);
+            $response = $this->put(route('assignments.update', $assignment), $data);
 
             $response->assertRedirect(route('assignments.index'))
                 ->assertSessionHas('success', '作业更新成功');
@@ -99,7 +99,7 @@ describe('AssignmentController', function () {
         test('validates update data', function () {
             $assignment = Assignment::factory()->create();
 
-            $response = $this->withoutMiddleware()->put(route('assignments.update', $assignment), [
+            $response = $this->put(route('assignments.update', $assignment), [
                 'name' => '',
                 'upload_type_id' => 99999,
             ]);
@@ -112,7 +112,7 @@ describe('AssignmentController', function () {
         test('can delete an assignment', function () {
             $assignment = Assignment::factory()->create();
 
-            $response = $this->withoutMiddleware()->delete(route('assignments.destroy', $assignment));
+            $response = $this->delete(route('assignments.destroy', $assignment));
 
             $response->assertRedirect(route('assignments.index'))
                 ->assertSessionHas('success', '作业删除成功');

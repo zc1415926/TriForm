@@ -89,7 +89,7 @@ describe('StudentController', function () {
                 'year' => 2025,
             ];
 
-            $response = $this->withoutMiddleware()->post(route('students.store'), $data);
+            $response = $this->post(route('students.store'), $data);
 
             $response->assertRedirect(route('students.index'))
                 ->assertSessionHas('success', '学生创建成功');
@@ -98,13 +98,13 @@ describe('StudentController', function () {
         });
 
         test('validates required fields', function () {
-            $response = $this->withoutMiddleware()->post(route('students.store'), []);
+            $response = $this->post(route('students.store'), []);
 
             $response->assertSessionHasErrors(['name', 'grade', 'class', 'year']);
         });
 
         test('validates grade range', function () {
-            $response = $this->withoutMiddleware()->post(route('students.store'), [
+            $response = $this->post(route('students.store'), [
                 'name' => '张三',
                 'grade' => 7,
                 'class' => 2,
@@ -115,7 +115,7 @@ describe('StudentController', function () {
         });
 
         test('validates class range', function () {
-            $response = $this->withoutMiddleware()->post(route('students.store'), [
+            $response = $this->post(route('students.store'), [
                 'name' => '张三',
                 'grade' => 3,
                 'class' => 25,
@@ -126,7 +126,7 @@ describe('StudentController', function () {
         });
 
         test('validates year range', function () {
-            $response = $this->withoutMiddleware()->post(route('students.store'), [
+            $response = $this->post(route('students.store'), [
                 'name' => '张三',
                 'grade' => 3,
                 'class' => 2,
@@ -148,7 +148,7 @@ describe('StudentController', function () {
                 'year' => 2026,
             ];
 
-            $response = $this->withoutMiddleware()->put(route('students.update', $student), $data);
+            $response = $this->put(route('students.update', $student), $data);
 
             $response->assertRedirect(route('students.index'))
                 ->assertSessionHas('success', '学生更新成功');
@@ -159,7 +159,7 @@ describe('StudentController', function () {
         test('validates update data', function () {
             $student = Student::factory()->create();
 
-            $response = $this->withoutMiddleware()->put(route('students.update', $student), [
+            $response = $this->put(route('students.update', $student), [
                 'name' => '',
                 'grade' => 10,
                 'class' => 30,
@@ -174,7 +174,7 @@ describe('StudentController', function () {
         test('can delete a student', function () {
             $student = Student::factory()->create();
 
-            $response = $this->withoutMiddleware()->delete(route('students.destroy', $student));
+            $response = $this->delete(route('students.destroy', $student));
 
             $response->assertRedirect(route('students.index'))
                 ->assertSessionHas('success', '学生删除成功');

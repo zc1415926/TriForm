@@ -59,7 +59,7 @@ describe('LessonController', function () {
                 'content' => '<p>课程内容</p>',
             ];
 
-            $response = $this->withoutMiddleware()->post(route('lessons.store'), $data);
+            $response = $this->post(route('lessons.store'), $data);
 
             $response->assertRedirect(route('lessons.index'))
                 ->assertSessionHas('success', '课时创建成功');
@@ -91,7 +91,7 @@ describe('LessonController', function () {
                 ],
             ];
 
-            $response = $this->withoutMiddleware()->post(route('lessons.store'), $data);
+            $response = $this->post(route('lessons.store'), $data);
 
             $response->assertRedirect(route('lessons.index'));
 
@@ -100,7 +100,7 @@ describe('LessonController', function () {
         });
 
         test('validates required fields', function () {
-            $response = $this->withoutMiddleware()->post(route('lessons.store'), []);
+            $response = $this->post(route('lessons.store'), []);
 
             $response->assertSessionHasErrors(['name', 'year', 'is_active']);
         });
@@ -122,7 +122,6 @@ describe('LessonController', function () {
                 'content' => '<p>更新后的内容</p>',
             ];
 
-            // 使用 PUT 请求
             $response = $this->put(route('lessons.update', $lesson), $data);
 
             $response->assertRedirect(route('lessons.index'))
@@ -133,7 +132,7 @@ describe('LessonController', function () {
                 ->and($lesson->year)->toBe('2026')
                 ->and($lesson->is_active)->toBe(false)
                 ->and($lesson->content)->toBe('<p>更新后的内容</p>');
-        })->skip('CSRF issue in test environment');
+        });
 
         test('can update lesson with new assignments', function () {
             $lesson = Lesson::factory()->create();
@@ -154,7 +153,7 @@ describe('LessonController', function () {
                 ],
             ];
 
-            $response = $this->withoutMiddleware()->put(route('lessons.update', $lesson), $data);
+            $response = $this->put(route('lessons.update', $lesson), $data);
 
             $response->assertRedirect(route('lessons.index'));
 
@@ -166,7 +165,7 @@ describe('LessonController', function () {
         test('validates update data', function () {
             $lesson = Lesson::factory()->create();
 
-            $response = $this->withoutMiddleware()->put(route('lessons.update', $lesson), [
+            $response = $this->put(route('lessons.update', $lesson), [
                 'name' => '',
                 'year' => '',
             ]);
@@ -179,7 +178,7 @@ describe('LessonController', function () {
         test('can delete a lesson', function () {
             $lesson = Lesson::factory()->create();
 
-            $response = $this->withoutMiddleware()->delete(route('lessons.destroy', $lesson));
+            $response = $this->delete(route('lessons.destroy', $lesson));
 
             $response->assertRedirect(route('lessons.index'))
                 ->assertSessionHas('success', '课时删除成功');
