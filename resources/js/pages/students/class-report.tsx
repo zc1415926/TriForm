@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import axios from 'axios';
 import React, { useState } from 'react';
+import axios from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

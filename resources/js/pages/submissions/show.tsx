@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
+import axios from '@/lib/axios';
 import { StlModelViewer } from '@/components/stl-model-viewer';
 import { VoxModelViewer, type VoxModelViewerRef } from '@/components/vox-model-viewer';
 import { Badge } from '@/components/ui/badge';
