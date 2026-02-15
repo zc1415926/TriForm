@@ -41,7 +41,7 @@ export function UserMenuContent({ user }: Props) {
                         onClick={cleanup}
                     >
                         <Settings className="mr-2 h-4 w-4 text-blue-500" />
-                        <span className="font-medium">设置</span>
+                        <span className="font-medium">账号设置</span>
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
