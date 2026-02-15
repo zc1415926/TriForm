@@ -388,48 +388,43 @@ export default function SubmissionIndex() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="作品提交" />
 
-            <div className="space-y-6 p-6 max-w-[1400px] mx-auto">
+            <div className="space-y-6 p-6 max-w-7xl mx-auto">
                 {/* 页面标题区域 */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 p-8">
-                    {/* 装饰元素 */}
-                    <div className="absolute top-4 right-4 w-16 h-16 bg-green-200 rounded-full opacity-30 animate-float" />
-                    <div className="absolute bottom-4 right-20 w-10 h-10 bg-blue-200 rounded-full opacity-30 animate-float" style={{ animationDelay: '1s' }} />
-                    
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200">
-                                <Upload className="w-6 h-6 text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-500 bg-clip-text text-transparent">
-                                作品提交
-                            </h1>
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-teal-600 to-emerald-700 p-8 text-white shadow-xl">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-50" />
+                    <div className="relative z-10 flex items-center gap-4">
+                        <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <Upload className="w-8 h-8" />
                         </div>
-                        <p className="text-gray-500 ml-1">选择课时并上传你的创意作品 🎨</p>
+                        <div>
+                            <h1 className="text-3xl font-bold">作品提交</h1>
+                            <p className="text-green-100">选择课时并上传你的创意作品</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* 成功/错误提示 */}
                 {success && (
-                    <div className="rounded-2xl bg-green-50 border-2 border-green-200 p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <div className="rounded-xl bg-green-50 border border-green-200 p-4 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
                         </div>
-                        <div className="text-green-800 font-medium">{success}</div>
+                        <span className="text-green-800 font-medium">{success}</span>
                     </div>
                 )}
 
                 {error && (
-                    <div className="rounded-2xl bg-red-50 border-2 border-red-200 p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-red-600" />
+                    <div className="rounded-xl bg-red-50 border border-red-200 p-4 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 text-red-600" />
                         </div>
-                        <div className="text-red-800 font-medium">{error}</div>
+                        <span className="text-red-800 font-medium">{error}</span>
                     </div>
                 )}
 
                 {/* 表单区域 */}
-                <Card variant="soft" className="overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 border-b border-blue-100/50 p-6">
+                <Card className="overflow-hidden shadow-lg border-0">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100 p-6">
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-amber-500" />
                             <h2 className="text-lg font-bold text-gray-800">填写提交信息</h2>
@@ -438,15 +433,13 @@ export default function SubmissionIndex() {
                     <CardContent className="p-6">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* 年份选择 */}
-                            <div className="space-y-3">
-                                <Label htmlFor="year" className="flex items-center gap-2 text-base">
-                                    <span className="font-semibold">📚 选择年份</span>
-                                </Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="year" className="text-gray-700 font-medium">选择年份</Label>
                                 <Select onValueChange={handleYearChange} disabled={loading}>
-                                    <SelectTrigger className="rounded-xl h-12 border-gray-200">
+                                    <SelectTrigger className="rounded-lg h-11 border-gray-200">
                                         <SelectValue placeholder="请选择年份" />
                                     </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
+                                    <SelectContent>
                                         {years.map((year) => (
                                             <SelectItem key={year} value={year}>
                                                 {year}年
@@ -457,10 +450,8 @@ export default function SubmissionIndex() {
                             </div>
 
                             {/* 学生选择 */}
-                            <div className="space-y-3">
-                                <Label htmlFor="student_id" className="flex items-center gap-2 text-base">
-                                    <span className="font-semibold">👤 选择学生</span>
-                                </Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="student_id" className="text-gray-700 font-medium">选择学生</Label>
                                 {loading && students.length === 0 ? (
                                     <div className="flex items-center gap-2 text-gray-400 py-3">
                                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -472,10 +463,10 @@ export default function SubmissionIndex() {
                                         onValueChange={(value) => setData('student_id', value)}
                                         disabled={loading || students.length === 0}
                                     >
-                                        <SelectTrigger className="rounded-xl h-12 border-gray-200">
+                                        <SelectTrigger className="rounded-lg h-11 border-gray-200">
                                             <SelectValue placeholder={students.length === 0 ? "请先选择年份" : "请选择学生"} />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl">
+                                        <SelectContent>
                                             {students.map((student) => (
                                                 <SelectItem key={student.id} value={student.id.toString()}>
                                                     {student.name}
@@ -487,10 +478,8 @@ export default function SubmissionIndex() {
                             </div>
 
                             {/* 课时选择 */}
-                            <div className="space-y-3">
-                                <Label htmlFor="lesson" className="flex items-center gap-2 text-base">
-                                    <span className="font-semibold">📖 选择课时</span>
-                                </Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="lesson" className="text-gray-700 font-medium">选择课时</Label>
                                 {loading && lessons.length === 0 ? (
                                     <div className="flex items-center gap-2 text-gray-400 py-3">
                                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -498,10 +487,10 @@ export default function SubmissionIndex() {
                                     </div>
                                 ) : (
                                     <Select onValueChange={handleLessonChange} disabled={loading || lessons.length === 0}>
-                                        <SelectTrigger className="rounded-xl h-12 border-gray-200">
+                                        <SelectTrigger className="rounded-lg h-11 border-gray-200">
                                             <SelectValue placeholder={lessons.length === 0 ? "请先选择年份" : "请选择课时"} />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl">
+                                        <SelectContent>
                                             {lessons.map((lesson) => (
                                                 <SelectItem key={lesson.id} value={lesson.id.toString()}>
                                                     {lesson.name}
@@ -514,11 +503,9 @@ export default function SubmissionIndex() {
 
                             {/* 课时内容显示 */}
                             {selectedLesson && selectedLesson.content && (
-                                <div className="space-y-3">
-                                    <Label className="flex items-center gap-2 text-base">
-                                        <span className="font-semibold">📝 课时内容</span>
-                                    </Label>
-                                    <div className="rounded-xl border-2 border-purple-100 bg-purple-50/50 p-4 tiptap-editor-content">
+                                <div className="space-y-2">
+                                    <Label className="text-gray-700 font-medium">课时内容</Label>
+                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 tiptap-editor-content">
                                         <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
                                     </div>
                                 </div>
@@ -526,14 +513,14 @@ export default function SubmissionIndex() {
 
                             {/* 作业上传区域 */}
                             <div className="space-y-4">
-                                <Label className="flex items-center gap-2 text-base">
-                                    <span className="font-semibold">🎨 作业列表</span>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-gray-700 font-medium">作业列表</Label>
                                     {selectedFilesCount > 0 && (
-                                        <Badge variant="colored" className="ml-2 bg-green-100 text-green-700 border-green-200">
+                                        <Badge variant="secondary" className="bg-green-100 text-green-700">
                                             已选 {selectedFilesCount} 个文件
                                         </Badge>
                                     )}
-                                </Label>
+                                </div>
                                 
                                 {loading && assignments.length === 0 ? (
                                     <div className="flex items-center justify-center gap-2 text-gray-400 py-8">
@@ -549,13 +536,12 @@ export default function SubmissionIndex() {
                                             return (
                                                 <Card 
                                                     key={assignment.id} 
-                                                    variant="bordered"
-                                                    className={`overflow-hidden transition-all ${data.assignments[index]?.file ? 'border-green-300 bg-green-50/30' : ''}`}
+                                                    className={`overflow-hidden shadow-sm ${data.assignments[index]?.file ? 'border-green-200 bg-green-50/30' : ''}`}
                                                 >
                                                     <CardContent className="p-5 space-y-4">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-10 h-10 rounded-xl ${fileTypeInfo.color} flex items-center justify-center`}>
+                                                                <div className={`w-10 h-10 rounded-lg ${fileTypeInfo.color} flex items-center justify-center`}>
                                                                     <FileIcon className="w-5 h-5" />
                                                                 </div>
                                                                 <div>
@@ -565,8 +551,8 @@ export default function SubmissionIndex() {
                                                                             {fileTypeInfo.label}
                                                                         </span>
                                                                         {assignment.is_required && (
-                                                                            <Badge variant="destructive" className="text-xs bg-red-100 text-red-600 border-red-200 hover:bg-red-100">
-                                                                                ⚠️ 必须提交
+                                                                            <Badge variant="destructive" className="text-xs">
+                                                                                必须提交
                                                                             </Badge>
                                                                         )}
                                                                     </div>
@@ -574,7 +560,7 @@ export default function SubmissionIndex() {
                                                             </div>
                                                         </div>
                                                         
-                                                        <div className="flex items-center gap-4 text-sm text-gray-500 bg-gray-50 rounded-xl p-3">
+                                                        <div className="flex items-center gap-4 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
                                                             <div className="flex items-center gap-1">
                                                                 <span>允许:</span>
                                                                 <span className="font-medium text-gray-700">{assignment.upload_type.extensions.join(', ')}</span>
@@ -600,8 +586,8 @@ export default function SubmissionIndex() {
                                                                         }
                                                                         className="sr-only"
                                                                     />
-                                                                    <div className="px-5 py-2.5 bg-blue-50 text-blue-700 rounded-lg font-medium group-hover:bg-blue-100 transition-colors border-0">
-                                                                        📁 选择文件
+                                                                    <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium group-hover:bg-blue-100 transition-colors border border-blue-200">
+                                                                        选择文件
                                                                     </div>
                                                                     <span className="text-sm text-gray-500">
                                                                         {data.assignments[index]?.file ? data.assignments[index].file.name : '未选择文件'}
@@ -609,9 +595,9 @@ export default function SubmissionIndex() {
                                                                 </label>
                                                             </div>
                                                             {data.assignments[index]?.file && (
-                                                                <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-xl p-3">
-                                                                    <CheckCircle2 className="w-5 h-5" />
-                                                                    <span className="font-medium">
+                                                                <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-lg p-3">
+                                                                    <CheckCircle2 className="w-4 h-4" />
+                                                                    <span className="font-medium text-sm">
                                                                         已选择: {data.assignments[index].file.name}
                                                                     </span>
                                                                 </div>
@@ -620,7 +606,7 @@ export default function SubmissionIndex() {
                                                             {data.assignments[index]?.file &&
                                                                 assignment.upload_type.extensions.includes('stl') && (
                                                                     <div className="mt-4 space-y-2">
-                                                                        <Label className="flex items-center gap-2">
+                                                                        <Label className="flex items-center gap-2 text-gray-700">
                                                                             <ImageIcon className="w-4 h-4 text-blue-500" />
                                                                             预览图生成
                                                                         </Label>

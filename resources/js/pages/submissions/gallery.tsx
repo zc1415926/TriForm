@@ -326,120 +326,118 @@ export default function SubmissionGallery() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="作品广场" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="space-y-6 p-6 max-w-7xl mx-auto">
                 {/* 页面标题区域 */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50 via-green-50 to-amber-50 p-8">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white shadow-xl">
                     {/* 装饰元素 */}
                     <div className="absolute top-4 right-4 w-16 h-16 bg-blue-200 rounded-full opacity-30 animate-float" />
                     <div className="absolute bottom-4 right-20 w-10 h-10 bg-green-200 rounded-full opacity-30 animate-float" style={{ animationDelay: '1s' }} />
                     
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
-                                    <Palette className="w-6 h-6 text-white" />
-                                </div>
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
-                                    作品广场
-                                </h1>
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <Palette className="w-8 h-8" />
                             </div>
-                            <p className="text-gray-500 ml-1">欣赏同学们的精彩创意作品 🎨</p>
+                            <div>
+                                <h1 className="text-3xl font-bold">作品广场</h1>
+                                <p className="text-blue-100">欣赏同学们的精彩创意作品</p>
+                            </div>
                         </div>
                         
                         {/* 视图切换 */}
-                        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 shadow-sm">
+                        <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl p-1">
                             <Button
-                                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                                 size="icon"
-                                className={`h-10 w-10 rounded-xl ${viewMode === 'grid' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
+                                className={`h-9 w-9 rounded-lg ${viewMode === 'grid' ? 'bg-white text-blue-600' : 'text-white hover:bg-white/20'}`}
                                 onClick={() => setViewMode('grid')}
                                 title="网格视图"
                             >
-                                <Grid3X3 className="size-5" />
+                                <Grid3X3 className="size-4" />
                             </Button>
                             <Button
-                                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                                 size="icon"
-                                className={`h-10 w-10 rounded-xl ${viewMode === 'list' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
+                                className={`h-9 w-9 rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600' : 'text-white hover:bg-white/20'}`}
                                 onClick={() => setViewMode('list')}
                                 title="列表视图"
                             >
-                                <List className="size-5" />
+                                <List className="size-4" />
                             </Button>
                             <Button
-                                variant={viewMode === 'masonry' ? 'default' : 'ghost'}
+                                variant={viewMode === 'masonry' ? 'secondary' : 'ghost'}
                                 size="icon"
-                                className={`h-10 w-10 rounded-xl ${viewMode === 'masonry' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
+                                className={`h-9 w-9 rounded-lg ${viewMode === 'masonry' ? 'bg-white text-blue-600' : 'text-white hover:bg-white/20'}`}
                                 onClick={() => setViewMode('masonry')}
                                 title="瀑布流视图"
                             >
-                                <LayoutGrid className="size-5" />
+                                <LayoutGrid className="size-4" />
                             </Button>
                         </div>
                     </div>
 
                     {/* 统计卡片 */}
                     <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <Sparkles className="w-4 h-4 text-amber-500" />
-                                <span className="text-xs text-gray-500">总作品</span>
+                                <Sparkles className="w-4 h-4" />
+                                <span className="text-xs text-blue-100">总作品</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+                            <div className="text-2xl font-bold">{stats.total}</div>
                         </div>
-                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <ImageIcon className="w-4 h-4 text-pink-500" />
-                                <span className="text-xs text-gray-500">图片</span>
+                                <ImageIcon className="w-4 h-4" />
+                                <span className="text-xs text-blue-100">图片</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{stats.image}</div>
+                            <div className="text-2xl font-bold">{stats.image}</div>
                         </div>
-                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <Box className="w-4 h-4 text-blue-500" />
-                                <span className="text-xs text-gray-500">3D模型</span>
+                                <Box className="w-4 h-4" />
+                                <span className="text-xs text-blue-100">3D模型</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{stats.model}</div>
+                            <div className="text-2xl font-bold">{stats.model}</div>
                         </div>
-                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <Layers className="w-4 h-4 text-purple-500" />
-                                <span className="text-xs text-gray-500">VOX</span>
+                                <Layers className="w-4 h-4" />
+                                <span className="text-xs text-blue-100">VOX</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{stats.vox}</div>
+                            <div className="text-2xl font-bold">{stats.vox}</div>
                         </div>
-                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <Trophy className="w-4 h-4 text-amber-500" />
-                                <span className="text-xs text-gray-500">已评分</span>
+                                <Trophy className="w-4 h-4" />
+                                <span className="text-xs text-blue-100">已评分</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{stats.scored}</div>
+                            <div className="text-2xl font-bold">{stats.scored}</div>
                         </div>
                     </div>
                 </div>
 
                 {/* 筛选工具栏 */}
-                <Card variant="soft" className="p-4">
-                    <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-4">
                         {/* 年份筛选 */}
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Calendar className="size-4 text-blue-600" />
-                            </div>
+                            <span className="text-sm text-gray-500 font-medium">年份筛选</span>
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-[140px] rounded-xl border-gray-200">
-                                    <SelectValue placeholder="筛选年份" />
+                                <SelectTrigger className="w-[140px] rounded-lg border-gray-200">
+                                    <SelectValue placeholder="全部年份" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                    <SelectItem value="all">📚 全部年份</SelectItem>
+                                <SelectContent>
+                                    <SelectItem value="all">全部年份</SelectItem>
                                     {years.map((year) => (
                                         <SelectItem key={year} value={year}>
-                                            🎓 {year}年
+                                            {year}年
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        <div className="w-px h-6 bg-gray-200" />
 
                         {/* 搜索框 */}
                         <form onSubmit={handleSearch} className="flex items-center gap-2">
@@ -447,71 +445,69 @@ export default function SubmissionGallery() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                                 <Input
                                     type="search"
-                                    placeholder="🔍 搜索学生姓名..."
+                                    placeholder="搜索学生姓名..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-[220px] pl-10 rounded-xl border-gray-200 h-10"
+                                    className="w-[200px] pl-10 rounded-lg border-gray-200"
                                 />
                             </div>
-                            <Button type="submit" variant="outline" size="sm" className="rounded-xl h-10">
+                            <Button type="submit" variant="outline" size="sm" className="rounded-lg">
                                 搜索
                             </Button>
                         </form>
 
-                        <div className="h-8 w-px bg-gray-200" />
+                        <div className="w-px h-6 bg-gray-200" />
 
                         {/* 排序 */}
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">排序:</span>
+                            <span className="text-sm text-gray-500 font-medium">排序:</span>
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleSort('created_at')}
-                                className={`rounded-xl ${sortField === 'created_at' ? 'bg-blue-100 text-blue-600' : ''}`}
+                                className={`rounded-lg ${sortField === 'created_at' ? 'bg-blue-100 text-blue-600' : ''}`}
                             >
-                                📅 时间
+                                时间
                                 <SortIcon field="created_at" />
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleSort('score')}
-                                className={`rounded-xl ${sortField === 'score' ? 'bg-blue-100 text-blue-600' : ''}`}
+                                className={`rounded-lg ${sortField === 'score' ? 'bg-blue-100 text-blue-600' : ''}`}
                             >
-                                ⭐ 分数
+                                分数
                                 <SortIcon field="score" />
                             </Button>
                         </div>
 
-                        <div className="ml-auto flex items-center gap-2">
-                            {(selectedYear !== 'all' || searchQuery) && (
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={clearFilters}
-                                    className="rounded-xl text-gray-500 hover:text-red-500"
-                                >
-                                    <X className="mr-1 size-4" />
-                                    清除筛选
-                                </Button>
-                            )}
-                        </div>
+                        {(selectedYear !== 'all' || searchQuery) && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={clearFilters}
+                                className="rounded-lg text-gray-500 hover:text-red-500"
+                            >
+                                <X className="mr-1 size-4" />
+                                清除筛选
+                            </Button>
+                        )}
                     </div>
-                </Card>
+                </div>
 
                 {/* 作品列表 */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4" />
-                        <div className="text-gray-500 text-lg">正在加载作品...</div>
+                        <div className="text-gray-500">正在加载作品...</div>
                     </div>
                 ) : submissions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <Palette className="size-12 text-gray-400" />
+                        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <Palette className="size-10 text-gray-400" />
                         </div>
-                        <div className="text-xl font-medium text-gray-600 mb-2">还没有作品</div>
-                        <div className="text-gray-400">快来上传你的第一个作品吧！🎨</div>
+                        <p className="text-gray-500 font-medium">还没有作品</p>
+                        <p className="text-gray-400 text-sm mt-1">快来上传你的第一个作品吧</p>
                     </div>
                 ) : viewMode === 'grid' ? (
                     // 网格视图

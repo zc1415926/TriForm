@@ -3,7 +3,7 @@
 use App\Http\Controllers\UploadTypeController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->prefix('upload-types')->name('upload-types.')->group(function () {
     Route::get('/', [UploadTypeController::class, 'index'])->name('index');
     Route::get('/create', [UploadTypeController::class, 'create'])->name('create');
     Route::post('/', [UploadTypeController::class, 'store'])->name('store');
