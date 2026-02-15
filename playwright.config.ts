@@ -29,7 +29,6 @@ export default defineConfig({
             use: {
                 browserName: 'firefox',
                 launchOptions: {
-                    executablePath: '/usr/bin/firefox',
                     args: ['--no-sandbox', '--disable-setuid-sandbox'],
                 },
                 viewport: null,
