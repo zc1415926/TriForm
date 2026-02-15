@@ -8,20 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
 type Props = {
     status?: string;
     canResetPassword: boolean;
-    canRegister: boolean;
 };
 
 export default function Login({
     status,
     canResetPassword,
-    canRegister,
 }: Props) {
     return (
         <AuthLayout
@@ -110,14 +107,7 @@ export default function Login({
                             </Button>
                         </div>
 
-                        {canRegister && (
-                            <div className="text-center text-sm text-gray-500">
-                                还没有账号？{' '}
-                                <TextLink href={register()} tabIndex={5} className="font-medium">
-                                    立即注册
-                                </TextLink>
-                            </div>
-                        )}
+
                     </>
                 )}
             </Form>
