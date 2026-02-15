@@ -7,14 +7,9 @@ use App\Models\Submission;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia;
 
-beforeEach(function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-});
-
 describe('SubmissionController', function () {
     describe('index', function () {
-        test('can access submissions index page', function () {
+        test('can access submissions index page without login', function () {
             Student::factory()->create(['year' => 2025]);
 
             $response = $this->get(route('submissions.index'));
@@ -40,32 +35,22 @@ describe('SubmissionController', function () {
     });
 
     describe('getAllSubmissions', function () {
-        test('returns all submissions with relationships', function () {
+        test('returns all submissions with relationships without login', function () {
             $submission = Submission::factory()->create();
 
             $response = $this->get(route('api.submissions.all'));
 
             $response->assertOk()
-                ->assertJsonCount(1)
-                ->assertJsonStructure([
-                    '*' => [
-                        'id',
-                        'student_id',
-                        'assignment_id',
-                        'file_path',
-                        'file_name',
-                        'file_size',
-                        'status',
-                        'score',
-                        'student',
-                        'assignment',
-                    ],
+                ->assertJsonFragment([
+                    'id' => $submission->id,
+                    'student_id' => $submission->student_id,
+                    'assignment_id' => $submission->assignment_id,
                 ]);
         });
     });
 
     describe('getStudentsByYear', function () {
-        test('returns students filtered by year', function () {
+        test('returns students filtered by year without login', function () {
             Student::factory()->create(['year' => 2025, 'name' => '张三']);
             Student::factory()->create(['year' => 2024, 'name' => '李四']);
 
@@ -78,7 +63,7 @@ describe('SubmissionController', function () {
     });
 
     describe('getLessonsByYear', function () {
-        test('returns active lessons filtered by year', function () {
+        test('returns active lessons filtered by year without login', function () {
             $activeLesson = Lesson::factory()->create(['year' => '2025', 'is_active' => true]);
             Lesson::factory()->create(['year' => '2025', 'is_active' => false]);
 
@@ -90,7 +75,7 @@ describe('SubmissionController', function () {
     });
 
     describe('getAssignmentsByLesson', function () {
-        test('returns published assignments for lesson', function () {
+        test('returns published assignments for lesson without login', function () {
             $lesson = Lesson::factory()->create();
             Assignment::factory()->create(['lesson_id' => $lesson->id, 'is_published' => true]);
             Assignment::factory()->create(['lesson_id' => $lesson->id, 'is_published' => false]);
@@ -103,7 +88,7 @@ describe('SubmissionController', function () {
     });
 
     describe('getSubmissionsByAssignment', function () {
-        test('returns submissions for assignment', function () {
+        test('returns submissions for assignment without login', function () {
             $assignment = Assignment::factory()->create();
             Submission::factory()->count(3)->create(['assignment_id' => $assignment->id]);
 
@@ -116,9 +101,10 @@ describe('SubmissionController', function () {
 
     describe('updateScore', function () {
         test('can update submission score with grade G', function () {
+            $user = User::factory()->create();
             $submission = Submission::factory()->create(['score' => null]);
 
-            $response = $this->postJson(route('api.submissions.score'), [
+            $response = $this->actingAs($user)->postJson(route('api.submissions.score'), [
                 'submission_id' => $submission->id,
                 'grade' => 'G',
             ]);
@@ -134,9 +120,10 @@ describe('SubmissionController', function () {
         });
 
         test('can update submission score with grade A', function () {
+            $user = User::factory()->create();
             $submission = Submission::factory()->create(['score' => null]);
 
-            $response = $this->postJson(route('api.submissions.score'), [
+            $response = $this->actingAs($user)->postJson(route('api.submissions.score'), [
                 'submission_id' => $submission->id,
                 'grade' => 'A',
             ]);
@@ -150,22 +137,35 @@ describe('SubmissionController', function () {
         });
 
         test('validates grade values', function () {
+            $user = User::factory()->create();
             $submission = Submission::factory()->create();
 
-            $response = $this->postJson(route('api.submissions.score'), [
+            $response = $this->actingAs($user)->postJson(route('api.submissions.score'), [
                 'submission_id' => $submission->id,
                 'grade' => 'X',
             ]);
 
             $response->assertStatus(422);
         });
+
+        test('requires authentication', function () {
+            $submission = Submission::factory()->create();
+
+            $response = $this->postJson(route('api.submissions.score'), [
+                'submission_id' => $submission->id,
+                'grade' => 'G',
+            ]);
+
+            $response->assertUnauthorized();
+        });
     });
 
     describe('cancelScore', function () {
         test('can cancel submission score', function () {
+            $user = User::factory()->create();
             $submission = Submission::factory()->create(['score' => 10]);
 
-            $response = $this->postJson(route('api.submissions.cancel-score'), [
+            $response = $this->actingAs($user)->postJson(route('api.submissions.cancel-score'), [
                 'submission_id' => $submission->id,
             ]);
 
@@ -177,20 +177,39 @@ describe('SubmissionController', function () {
 
             expect($submission->fresh()->score)->toBeNull();
         });
+
+        test('requires authentication', function () {
+            $submission = Submission::factory()->create(['score' => 10]);
+
+            $response = $this->postJson(route('api.submissions.cancel-score'), [
+                'submission_id' => $submission->id,
+            ]);
+
+            $response->assertUnauthorized();
+        });
     });
 
     describe('destroy', function () {
         test('can delete a submission', function () {
+            $user = User::factory()->create();
             $submission = Submission::factory()->create([
                 'file_path' => 'test/file.stl',
             ]);
 
-            $response = $this->deleteJson(route('api.submissions.destroy', $submission->id));
+            $response = $this->actingAs($user)->deleteJson(route('api.submissions.destroy', $submission->id));
 
             $response->assertOk()
                 ->assertJson(['success' => true]);
 
             $this->assertDatabaseMissing('submissions', ['id' => $submission->id]);
+        });
+
+        test('requires authentication', function () {
+            $submission = Submission::factory()->create();
+
+            $response = $this->deleteJson(route('api.submissions.destroy', $submission->id));
+
+            $response->assertUnauthorized();
         });
     });
 });

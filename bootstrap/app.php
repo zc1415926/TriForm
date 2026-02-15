@@ -24,9 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'api/submissions/score',
-            'api/submissions/cancel-score',
-            'api/submissions/{id}',
+            'submissions',
+            'api/submissions/*',
         ]);
 
         $middleware->alias([

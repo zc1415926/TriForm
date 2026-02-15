@@ -6,13 +6,31 @@ use App\Models\Lesson;
 use App\Models\Student;
 use App\Models\Submission;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(): Response|RedirectResponse
+    {
+        $user = auth()->user();
+
+        // 未登录用户重定向到作品广场
+        if (! $user) {
+            return redirect()->route('submissions.gallery');
+        }
+
+        // 非管理员/老师也重定向到作品广场
+        if (! $user->isAdmin() && ! $user->isTeacher()) {
+            return redirect()->route('submissions.gallery');
+        }
+
+        // 管理员/老师显示仪表盘
+        return $this->renderDashboard();
+    }
+
+    private function renderDashboard(): Response
     {
         // 基础统计数据
         $stats = [
