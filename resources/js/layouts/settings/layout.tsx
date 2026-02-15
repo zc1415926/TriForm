@@ -44,7 +44,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     }
 
     return (
-        <div className="px-4 py-6 max-w-6xl mx-auto">
+        <div className="px-4 py-6 max-w-7xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">

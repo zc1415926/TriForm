@@ -388,7 +388,7 @@ export default function SubmissionIndex() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="作品提交" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="space-y-6 p-6 max-w-7xl mx-auto">
                 {/* 页面标题区域 */}
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 p-8">
                     {/* 装饰元素 */}
