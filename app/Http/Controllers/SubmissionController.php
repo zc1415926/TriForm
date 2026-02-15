@@ -614,9 +614,10 @@ class SubmissionController extends Controller
             'generated_at' => now()->format('Y-m-d H:i:s'),
         ];
 
-        $html = view('pdf.student-report', $data)->render();
-
         return \Spatie\LaravelPdf\Facades\Pdf::view('pdf.student-report', $data)
+            ->withBrowsershot(function (\Spatie\Browsershot\Browsershot $browsershot) {
+                $browsershot->setChromePath('/usr/bin/google-chrome');
+            })
             ->format('a4')
             ->name("{$student->name}_成绩报告.pdf");
     }
