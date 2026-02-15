@@ -103,11 +103,28 @@ class SubmissionController extends Controller
     public function getStudentsByYear(Request $request): \Illuminate\Http\JsonResponse
     {
         $year = $request->query('year');
+
+        // 如果没有指定年份，返回所有可用年份
+        if (! $year) {
+            $years = \App\Models\Student::select('year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->map(fn ($y) => (string) $y);
+
+            return response()->json([
+                'years' => $years,
+            ]);
+        }
+
+        // 返回指定年份的学生列表
         $students = \App\Models\Student::where('year', $year)
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return response()->json($students);
+        return response()->json([
+            'students' => $students,
+        ]);
     }
 
     public function getLessonsByYear(Request $request): \Illuminate\Http\JsonResponse
