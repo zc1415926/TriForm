@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class UploadTypeFactory extends Factory
 {
     /**
+     * The name of the factory's corresponding model.
+     */
+    protected $model = \App\Models\UploadType::class;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
