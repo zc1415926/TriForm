@@ -1,467 +1,498 @@
-import { Head } from '@inertiajs/react';
-import { DollarSign, Users, CreditCard, Activity, TrendingUp, Star, Sparkles, Trophy } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Head, Link, usePage } from '@inertiajs/react';
+import {
+    BarChart3,
+    BookOpen,
+    CheckCircle2,
+    Clock,
+    Eye,
+    FileText,
+    GraduationCap,
+    PieChart,
+    Star,
+    TrendingUp,
+    Users,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: '仪表盘',
         href: dashboard().url,
     },
 ];
 
-export default function Dashboard() {
-    // 模拟数据
-    const totalRevenue = 45231.89;
-    const subscriptions = 2356;
-    const sales = 12056;
-    const activeNow = 573;
-
-    // 模拟图表数据
-    const chartData = [
-        { month: '一月', revenue: 186, subscription: 80 },
-        { month: '二月', revenue: 305, subscription: 200 },
-        { month: '三月', revenue: 237, subscription: 120 },
-        { month: '四月', revenue: 73, subscription: 190 },
-        { month: '五月', revenue: 209, subscription: 130 },
-        { month: '六月', revenue: 214, subscription: 140 },
-    ];
-
-    // 模拟最近销售数据
-    const recentSales = [
-        {
-            id: 1,
-            name: '张三',
-            email: 'zhangsan@example.com',
-            amount: 299.00,
-            status: 'completed' as const,
-            avatar: 'ZS',
-        },
-        {
-            id: 2,
-            name: '李四',
-            email: 'lisi@example.com',
-            amount: 199.00,
-            status: 'processing' as const,
-            avatar: 'LS',
-        },
-        {
-            id: 3,
-            name: '王五',
-            email: 'wangwu@example.com',
-            amount: 399.00,
-            status: 'completed' as const,
-            avatar: 'WW',
-        },
-        {
-            id: 4,
-            name: '赵六',
-            email: 'zhaoliu@example.com',
-            amount: 99.00,
-            status: 'failed' as const,
-            avatar: 'ZL',
-        },
-        {
-            id: 5,
-            name: '钱七',
-            email: 'qianqi@example.com',
-            amount: 499.00,
-            status: 'completed' as const,
-            avatar: 'QQ',
-        },
-    ];
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'completed':
-                return (
-                    <Badge className="bg-green-100 text-green-700 border border-green-300 font-semibold">
-                        ✓ 已完成
-                    </Badge>
-                );
-            case 'processing':
-                return (
-                    <Badge className="bg-amber-100 text-amber-700 border border-amber-300 font-semibold">
-                        ⏳ 处理中
-                    </Badge>
-                );
-            case 'failed':
-                return (
-                    <Badge className="bg-red-100 text-red-700 border border-red-300 font-semibold">
-                        ✗ 失败
-                    </Badge>
-                );
-            default:
-                return <Badge>未知</Badge>;
-        }
+type PageProps = {
+    stats: {
+        total_students: number;
+        total_lessons: number;
+        today_submissions: number;
+        pending_reviews: number;
     };
+    lessonSubmissions: {
+        id: number;
+        name: string;
+        submission_count: number;
+    }[];
+    scoreDistribution: {
+        G: number;
+        A: number;
+        B: number;
+        C: number;
+        O: number;
+        unrated: number;
+    };
+    recentSubmissions: {
+        id: number;
+        student_name: string;
+        assignment_name: string;
+        lesson_name: string;
+        file_name: string;
+        score: number | null;
+        created_at: string;
+    }[];
+    pendingSubmissions: {
+        id: number;
+        student_name: string;
+        assignment_name: string;
+        lesson_name: string;
+        file_name: string;
+        created_at: string;
+    }[];
+    submissionTrend: {
+        date: string;
+        count: number;
+    }[];
+};
+
+export default function Dashboard() {
+    const {
+        stats,
+        lessonSubmissions,
+        scoreDistribution,
+        recentSubmissions,
+        pendingSubmissions,
+        submissionTrend,
+    } = usePage<PageProps>().props;
+
+    // 成绩分布颜色
+    const scoreColors: Record<string, string> = {
+        G: 'bg-emerald-500',
+        A: 'bg-blue-500',
+        B: 'bg-cyan-500',
+        C: 'bg-amber-500',
+        O: 'bg-red-500',
+        unrated: 'bg-gray-400',
+    };
+
+    const scoreLabels: Record<string, string> = {
+        G: 'G (12分)',
+        A: 'A (10分)',
+        B: 'B (8分)',
+        C: 'C (6分)',
+        O: 'O (0分)',
+        unrated: '未评分',
+    };
+
+    // 计算总数用于饼图
+    const totalScored =
+        scoreDistribution.G +
+        scoreDistribution.A +
+        scoreDistribution.B +
+        scoreDistribution.C +
+        scoreDistribution.O;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 bg-waves min-h-screen">
+            <Head title="仪表盘" />
+
+            <div className="space-y-6 p-6 max-w-7xl mx-auto">
                 {/* 页面标题 */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-4xl font-bold tracking-tight gradient-text-blue flex items-center gap-3">
-                            <Sparkles className="w-8 h-8 text-amber-500" />
-                            仪表盘
-                        </h2>
-                        <p className="text-gray-500 mt-2 text-lg">欢迎回来！今天也要加油哦 🌟</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="lg">
-                            <TrendingUp className="w-5 h-5 mr-2" />
-                            导出数据
-                        </Button>
-                        <Button variant="rainbow" size="lg">
-                            <Trophy className="w-5 h-5 mr-2" />
-                            生成报表
-                        </Button>
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white shadow-xl">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-50" />
+                    <div className="relative z-10 flex items-center gap-4">
+                        <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <BarChart3 className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold">仪表盘</h1>
+                            <p className="text-blue-100">教学数据概览与快捷操作中心</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* 统计卡片 - 彩虹色系 */}
+                {/* 统计卡片区 */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card variant="colored" className="relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-blue-400/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-bold text-blue-700 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-amber-500" />
-                                总收入
-                            </CardTitle>
-                            <div className="p-2.5 rounded-xl bg-blue-500 shadow-lg shadow-blue-500/30">
-                                <DollarSign className="h-5 w-5 text-white" />
+                    {/* 学生总数 */}
+                    <Card className="overflow-hidden border-0 shadow-lg">
+                        <CardContent className="p-0">
+                            <div className="flex items-center gap-4 p-5">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-200">
+                                    <Users className="size-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium">学生总数</p>
+                                    <p className="text-2xl font-bold text-gray-800">{stats.total_students}</p>
+                                </div>
+                            </div>
+                            <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+                        </CardContent>
+                    </Card>
+
+                    {/* 课时总数 */}
+                    <Card className="overflow-hidden border-0 shadow-lg">
+                        <CardContent className="p-0">
+                            <div className="flex items-center gap-4 p-5">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-200">
+                                    <BookOpen className="size-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium">课时总数</p>
+                                    <p className="text-2xl font-bold text-gray-800">{stats.total_lessons}</p>
+                                </div>
+                            </div>
+                            <div className="h-1 bg-gradient-to-r from-green-400 to-green-600" />
+                        </CardContent>
+                    </Card>
+
+                    {/* 今日提交 */}
+                    <Card className="overflow-hidden border-0 shadow-lg">
+                        <CardContent className="p-0">
+                            <div className="flex items-center gap-4 p-5">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-amber-200">
+                                    <FileText className="size-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium">今日提交</p>
+                                    <p className="text-2xl font-bold text-gray-800">{stats.today_submissions}</p>
+                                </div>
+                            </div>
+                            <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-600" />
+                        </CardContent>
+                    </Card>
+
+                    {/* 待评分 */}
+                    <Card className="overflow-hidden border-0 shadow-lg">
+                        <CardContent className="p-0">
+                            <div className="flex items-center gap-4 p-5">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 text-white shadow-lg shadow-purple-200">
+                                    <Star className="size-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium">待评分</p>
+                                    <p className="text-2xl font-bold text-gray-800">{stats.pending_reviews}</p>
+                                </div>
+                            </div>
+                            <div className="h-1 bg-gradient-to-r from-purple-400 to-purple-600" />
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* 图表区 */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* 提交趋势图 */}
+                    <Card className="overflow-hidden shadow-lg border-0">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-xl flex items-center justify-center">
+                                    <TrendingUp className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <CardTitle>近7天提交趋势</CardTitle>
+                                    <CardDescription>最近一周的每日作品提交数量</CardDescription>
+                                </div>
                             </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-gray-800">¥{totalRevenue.toLocaleString()}</div>
-                            <div className="flex items-center gap-1 mt-2">
-                                <span className="text-lg">📈</span>
-                                <p className="text-sm font-semibold text-green-600">+20.1% 较上月</p>
+                        <CardContent className="p-6">
+                            <div className="h-[250px] flex items-end gap-2">
+                                {submissionTrend.map((item, index) => {
+                                    const maxCount = Math.max(...submissionTrend.map(t => t.count), 1);
+                                    const height = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                                    return (
+                                        <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                                            <div className="text-xs font-medium text-gray-600">{item.count}</div>
+                                            <div
+                                                className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500"
+                                                style={{ height: `${Math.max(height, 5)}%` }}
+                                            />
+                                            <div className="text-xs text-gray-500">{item.date}</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card variant="soft" className="relative overflow-hidden group border-2 border-green-200">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-green-400/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-bold text-green-700 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-amber-500" />
-                                订阅数
-                            </CardTitle>
-                            <div className="p-2.5 rounded-xl bg-green-500 shadow-lg shadow-green-500/30">
-                                <Users className="h-5 w-5 text-white" />
+                    {/* 成绩分布饼图 */}
+                    <Card className="overflow-hidden shadow-lg border-0">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-rose-600 rounded-xl flex items-center justify-center">
+                                    <PieChart className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <CardTitle>成绩分布</CardTitle>
+                                    <CardDescription>已评分作品的等级分布情况</CardDescription>
+                                </div>
                             </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-gray-800">+{subscriptions.toLocaleString()}</div>
-                            <div className="flex items-center gap-1 mt-2">
-                                <span className="text-lg">🚀</span>
-                                <p className="text-sm font-semibold text-green-600">+180.1% 较上月</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card variant="soft" className="relative overflow-hidden group border-2 border-amber-200">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-amber-400/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-bold text-amber-700 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-amber-500" />
-                                销售数
-                            </CardTitle>
-                            <div className="p-2.5 rounded-xl bg-amber-500 shadow-lg shadow-amber-500/30">
-                                <CreditCard className="h-5 w-5 text-white" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-gray-800">+{sales.toLocaleString()}</div>
-                            <div className="flex items-center gap-1 mt-2">
-                                <span className="text-lg">💰</span>
-                                <p className="text-sm font-semibold text-green-600">+19% 较上月</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card variant="soft" className="relative overflow-hidden group border-2 border-pink-200">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-pink-400/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-bold text-pink-700 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-amber-500" />
-                                当前活跃
-                            </CardTitle>
-                            <div className="p-2.5 rounded-xl bg-pink-500 shadow-lg shadow-pink-500/30">
-                                <Activity className="h-5 w-5 text-white animate-pulse" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-gray-800">+{activeNow}</div>
-                            <div className="flex items-center gap-1 mt-2">
-                                <span className="text-lg">⚡</span>
-                                <p className="text-sm font-semibold text-amber-600">+201 实时在线</p>
+                        <CardContent className="p-6">
+                            <div className="space-y-4">
+                                {Object.entries(scoreDistribution).map(([key, count]) => {
+                                    const total = totalScored + scoreDistribution.unrated;
+                                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                                    return (
+                                        <div key={key} className="flex items-center gap-4">
+                                            <div className={`w-4 h-4 rounded-full ${scoreColors[key]}`} />
+                                            <div className="flex-1">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {scoreLabels[key]}
+                                                    </span>
+                                                    <span className="text-sm text-gray-500">{count} ({percentage}%)</span>
+                                                </div>
+                                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full ${scoreColors[key]} transition-all duration-500`}
+                                                        style={{ width: `${percentage}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* 图表区域 */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                    <Card variant="rainbow" className="col-span-4">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <span className="text-2xl">📊</span>
-                                收入概览
-                            </CardTitle>
-                            <CardDescription>近6个月收入与订阅趋势</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pl-2">
-                            <div className="h-[300px] w-full">
-                                <div className="h-full w-full">
-                                    <svg
-                                        viewBox="0 0 600 300"
-                                        className="h-full w-full"
-                                        preserveAspectRatio="none"
-                                    >
-                                        {/* 背景网格 */}
-                                        <defs>
-                                            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                                                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#E5E7EB" strokeWidth="1"/>
-                                            </pattern>
-                                        </defs>
-                                        <rect width="100%" height="100%" fill="url(#grid)" rx="12" />
-                                        
-                                        {/* 简化的折线图 - 收入 */}
-                                        <path
-                                            d={`M ${chartData.map((d, i) => `${i * 100},${300 - d.revenue}`).join(' L ')}`}
-                                            fill="none"
-                                            stroke="#3B82F6"
-                                            strokeWidth="4"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                        {/* 简化的折线图 - 订阅 */}
-                                        <path
-                                            d={`M ${chartData.map((d, i) => `${i * 100},${300 - d.subscription}`).join(' L ')}`}
-                                            fill="none"
-                                            stroke="#10B981"
-                                            strokeWidth="4"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                        {/* 数据点 - 收入 */}
-                                        {chartData.map((d, i) => (
-                                            <circle
-                                                key={`revenue-${i}`}
-                                                cx={i * 100}
-                                                cy={300 - d.revenue}
-                                                r="8"
-                                                fill="#3B82F6"
-                                                stroke="white"
-                                                strokeWidth="3"
-                                            />
-                                        ))}
-                                        {/* 数据点 - 订阅 */}
-                                        {chartData.map((d, i) => (
-                                            <circle
-                                                key={`subscription-${i}`}
-                                                cx={i * 100}
-                                                cy={300 - d.subscription}
-                                                r="8"
-                                                fill="#10B981"
-                                                stroke="white"
-                                                strokeWidth="3"
-                                            />
-                                        ))}
-                                    </svg>
-                                </div>
+                {/* 各课时提交统计 */}
+                <Card className="overflow-hidden shadow-lg border-0">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-teal-600 rounded-xl flex items-center justify-center">
+                                <GraduationCap className="w-5 h-5 text-white" />
                             </div>
-                            {/* 图例 */}
-                            <div className="flex items-center justify-center gap-6 mt-4">
-                                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
-                                    <div className="w-4 h-4 rounded-full bg-blue-500" />
-                                    <span className="text-sm font-semibold text-gray-700">收入</span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full">
-                                    <div className="w-4 h-4 rounded-full bg-green-500" />
-                                    <span className="text-sm font-semibold text-gray-700">订阅</span>
-                                </div>
+                            <div>
+                                <CardTitle>各课时提交统计</CardTitle>
+                                <CardDescription>各课时的作品提交数量排行</CardDescription>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* 最近销售 */}
-                    <Card variant="bordered" className="col-span-3">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <span className="text-2xl">🛒</span>
-                                最近销售
-                            </CardTitle>
-                            <CardDescription>最近 5 笔销售记录</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {recentSales.map((sale) => (
-                                    <div 
-                                        key={sale.id} 
-                                        className="flex items-center p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300"
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        {lessonSubmissions.length > 0 ? (
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {lessonSubmissions.map((lesson) => (
+                                    <div
+                                        key={lesson.id}
+                                        className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-blue-50 transition-colors"
                                     >
-                                        <Avatar className="h-12 w-12 ring-2 ring-blue-200">
-                                            <AvatarImage src="" alt={sale.name} />
-                                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 text-white font-bold">
-                                                {sale.avatar}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="ml-4 space-y-0.5 flex-1">
-                                            <p className="text-sm font-bold text-gray-800">{sale.name}</p>
-                                            <p className="text-xs text-gray-500">{sale.email}</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold">
+                                                {lesson.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-800">{lesson.name}</p>
+                                                <p className="text-sm text-gray-500">{lesson.submission_count} 份提交</p>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="font-bold text-gray-800">¥{sale.amount.toFixed(2)}</div>
-                                            <div className="mt-1">{getStatusBadge(sale.status)}</div>
-                                        </div>
+                                        <Badge variant="secondary" className="text-lg px-3 py-1">
+                                            {lesson.submission_count}
+                                        </Badge>
                                     </div>
                                 ))}
                             </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <BookOpen className="w-8 h-8 text-gray-400" />
+                                </div>
+                                <p className="text-gray-500 font-medium">暂无课时数据</p>
+                                <p className="text-gray-400 text-sm mt-1">请先创建课时并发布作业</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* 最近提交 & 待评分 */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* 最近提交 */}
+                    <Card className="overflow-hidden shadow-lg border-0">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                                        <Clock className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <CardTitle>最近提交</CardTitle>
+                                        <CardDescription>最近提交的作品记录</CardDescription>
+                                    </div>
+                                </div>
+                                <Link href="/submissions/show">
+                                    <Button variant="outline" size="sm" className="rounded-lg">
+                                        查看全部
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {recentSubmissions.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+                                            <TableHead className="font-semibold">学生</TableHead>
+                                            <TableHead className="font-semibold">课时/作业</TableHead>
+                                            <TableHead className="font-semibold">状态</TableHead>
+                                            <TableHead className="font-semibold">时间</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {recentSubmissions.map((submission) => (
+                                            <TableRow key={submission.id} className="hover:bg-blue-50/30">
+                                                <TableCell className="font-medium">{submission.student_name}</TableCell>
+                                                <TableCell>
+                                                    <div className="text-sm">
+                                                        <div className="text-gray-900">{submission.lesson_name}</div>
+                                                        <div className="text-gray-500">{submission.assignment_name}</div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {submission.score !== null ? (
+                                                        <Badge className="bg-gradient-to-r from-blue-500 to-blue-600">
+                                                            {submission.score} 分
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary">未评分</Badge>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-sm text-gray-500">{submission.created_at}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <FileText className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <p className="text-gray-500 font-medium">暂无提交记录</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* 待评分 */}
+                    <Card className="overflow-hidden shadow-lg border-0">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl flex items-center justify-center">
+                                        <CheckCircle2 className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <CardTitle>待评分作品</CardTitle>
+                                        <CardDescription>需要评分的作品列表</CardDescription>
+                                    </div>
+                                </div>
+                                <Link href="/submissions/show">
+                                    <Button variant="outline" size="sm" className="rounded-lg">
+                                        去评分
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {pendingSubmissions.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-gradient-to-r from-amber-50/50 to-orange-50/50">
+                                            <TableHead className="font-semibold">学生</TableHead>
+                                            <TableHead className="font-semibold">作业</TableHead>
+                                            <TableHead className="font-semibold">提交时间</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {pendingSubmissions.map((submission) => (
+                                            <TableRow key={submission.id} className="hover:bg-amber-50/30">
+                                                <TableCell className="font-medium">{submission.student_name}</TableCell>
+                                                <TableCell>
+                                                    <div className="text-sm text-gray-600">{submission.assignment_name}</div>
+                                                </TableCell>
+                                                <TableCell className="text-sm text-gray-500">{submission.created_at}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle2 className="w-8 h-8 text-green-500" />
+                                    </div>
+                                    <p className="text-gray-500 font-medium">太棒了！</p>
+                                    <p className="text-gray-400 text-sm mt-1">所有作品都已评分完成</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* 数据表格标签页 */}
-                <Tabs defaultValue="overview" className="space-y-4">
-                    <TabsList className="bg-white border-2 border-blue-100 p-2 rounded-2xl">
-                        <TabsTrigger value="overview" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white font-semibold">
-                            <span className="mr-2">📋</span>概览
-                        </TabsTrigger>
-                        <TabsTrigger value="analytics" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white font-semibold">
-                            <span className="mr-2">📈</span>分析
-                        </TabsTrigger>
-                        <TabsTrigger value="reports" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white font-semibold">
-                            <span className="mr-2">📄</span>报表
-                        </TabsTrigger>
-                        <TabsTrigger value="notifications" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white font-semibold">
-                            <span className="mr-2">🔔</span>通知
-                        </TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="overview" className="space-y-4">
+                {/* 快捷操作 */}
+                <Card className="overflow-hidden shadow-lg border-0">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                        <CardTitle>快捷操作</CardTitle>
+                        <CardDescription>常用功能的快速入口</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <Card variant="colored">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <span>👋</span>新用户
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-gray-800">1,234</div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span>📈</span>
-                                        <p className="text-sm font-semibold text-green-600">+12% 较上月</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card variant="soft" className="border-2 border-purple-200">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <span>🎯</span>活跃用户
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-gray-800">8,456</div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span>🚀</span>
-                                        <p className="text-sm font-semibold text-green-600">+8% 较上月</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card variant="soft" className="border-2 border-amber-200">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <span>🎨</span>转化率
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-gray-800">12.5%</div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span>⭐</span>
-                                        <p className="text-sm font-semibold text-green-600">+2.3% 较上月</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card variant="soft" className="border-2 border-pink-200">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <span>💎</span>平均订单价值
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-gray-800">¥456</div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span>💰</span>
-                                        <p className="text-sm font-semibold text-red-500">-3% 较上月</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <Link href="/submissions/show">
+                                <Button variant="outline" className="w-full h-20 flex flex-col gap-2 rounded-xl hover:bg-blue-50 hover:border-blue-200">
+                                    <Eye className="w-6 h-6 text-blue-500" />
+                                    <span>查看作品</span>
+                                </Button>
+                            </Link>
+                            <Link href="/students">
+                                <Button variant="outline" className="w-full h-20 flex flex-col gap-2 rounded-xl hover:bg-green-50 hover:border-green-200">
+                                    <Users className="w-6 h-6 text-green-500" />
+                                    <span>学生管理</span>
+                                </Button>
+                            </Link>
+                            <Link href="/lessons">
+                                <Button variant="outline" className="w-full h-20 flex flex-col gap-2 rounded-xl hover:bg-amber-50 hover:border-amber-200">
+                                    <BookOpen className="w-6 h-6 text-amber-500" />
+                                    <span>课时管理</span>
+                                </Button>
+                            </Link>
+                            <Link href="/submissions">
+                                <Button variant="outline" className="w-full h-20 flex flex-col gap-2 rounded-xl hover:bg-purple-50 hover:border-purple-200">
+                                    <FileText className="w-6 h-6 text-purple-500" />
+                                    <span>作品提交</span>
+                                </Button>
+                            </Link>
                         </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="analytics" className="space-y-4">
-                        <Card variant="rainbow">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <span className="text-2xl">📊</span>
-                                    数据分析
-                                </CardTitle>
-                                <CardDescription>详细的数据分析报告</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-500">
-                                    这里将显示详细的数据分析图表和指标。
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    
-                    <TabsContent value="reports" className="space-y-4">
-                        <Card variant="rainbow">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <span className="text-2xl">📄</span>
-                                    报表中心
-                                </CardTitle>
-                                <CardDescription>查看和下载各种报表</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-500">
-                                    这里将显示可用的报表列表。
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    
-                    <TabsContent value="notifications" className="space-y-4">
-                        <Card variant="rainbow">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <span className="text-2xl">🔔</span>
-                                    通知中心
-                                </CardTitle>
-                                <CardDescription>查看最新通知</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-500">
-                                    这里将显示最新的通知和提醒。
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );
 }
+
+

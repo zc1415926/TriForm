@@ -1,16 +1,13 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('dashboard');
-})->name('home');
+Route::get('/', [DashboardController::class, 'index'])->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
-})->name('dashboard');
+Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::resource('students', StudentController::class);
 Route::get('students/template/download', [StudentController::class, 'downloadTemplate'])->name('students.template.download');
