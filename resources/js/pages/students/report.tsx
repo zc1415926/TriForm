@@ -155,6 +155,13 @@ export default function StudentReport() {
         link.click();
     };
 
+    const handleExportPdf = () => {
+        if (!selectedStudentId) return;
+        
+        // 在新窗口打开 PDF
+        window.open(`/students/${selectedStudentId}/report-pdf`, '_blank');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="学生成绩报告" />
@@ -340,10 +347,20 @@ export default function StudentReport() {
                                     <CardTitle>作业提交记录</CardTitle>
                                     <CardDescription>详细提交和评分记录</CardDescription>
                                 </div>
-                                <Button variant="outline" onClick={handleExportExcel}>
-                                    <Download className="w-4 h-4 mr-2" />
-                                    导出 Excel
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={handleExportExcel}>
+                                        <Download className="w-4 h-4 mr-2" />
+                                        导出 Excel
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={handleExportPdf}
+                                        className="border-red-200 hover:bg-red-50 hover:text-red-600"
+                                    >
+                                        <Download className="w-4 h-4 mr-2" />
+                                        导出 PDF
+                                    </Button>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <Table>

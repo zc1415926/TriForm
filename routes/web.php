@@ -24,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     // 学生管理 - 自定义路由必须在 resource 之前定义
     Route::inertia('students/report', 'students/report')->name('students.report');
     Route::inertia('students/class-report', 'students/class-report')->name('students.class-report');
+    Route::get('students/{student}/report-pdf', [SubmissionController::class, 'exportStudentReportPdf'])->name('students.report.pdf');
     Route::get('students/template/download', [StudentController::class, 'downloadTemplate'])->name('students.template.download');
     Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
     Route::get('students/export/all', [StudentController::class, 'export'])->name('students.export');

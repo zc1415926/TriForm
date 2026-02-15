@@ -563,6 +563,64 @@ class SubmissionController extends Controller
         ]);
     }
 
+    /**
+     * 导出学生成绩报告 PDF
+     */
+    public function exportStudentReportPdf(string $studentId)
+    {
+        $student = \App\Models\Student::with([
+            'submissions' => function ($query): void {
+                $query->with(['assignment:id,name,lesson_id', 'assignment.lesson:id,name'])
+                    ->orderBy('created_at', 'desc');
+            },
+        ])->findOrFail($studentId);
+
+        $submissions = $student->submissions;
+        $totalSubmissions = $submissions->count();
+        $scoredSubmissions = $submissions->whereNotNull('score');
+        $totalScore = $scoredSubmissions->sum('score');
+        $scoredCount = $scoredSubmissions->count();
+        $avgScore = $scoredCount > 0 ? round($totalScore / $scoredCount, 2) : 0;
+
+        // 计算完成率
+        $totalAssignments = \App\Models\Assignment::whereHas('lesson', function ($q) use ($student): void {
+            $q->where('year', $student->year);
+        })->count();
+        $completionRate = $totalAssignments > 0
+            ? round(($totalSubmissions / $totalAssignments) * 100, 1)
+            : 0;
+
+        // 成绩分布
+        $gradeDistribution = [
+            'G' => $scoredSubmissions->where('score', 12)->count(),
+            'A' => $scoredSubmissions->where('score', 10)->count(),
+            'B' => $scoredSubmissions->where('score', 8)->count(),
+            'C' => $scoredSubmissions->where('score', 6)->count(),
+            'O' => $scoredSubmissions->where('score', 0)->count(),
+        ];
+
+        $data = [
+            'student' => $student,
+            'statistics' => [
+                'total_submissions' => $totalSubmissions,
+                'scored_submissions' => $scoredCount,
+                'total_score' => $totalScore,
+                'average_score' => $avgScore,
+                'completion_rate' => $completionRate,
+                'total_assignments' => $totalAssignments,
+            ],
+            'grade_distribution' => $gradeDistribution,
+            'submissions' => $submissions,
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $html = view('pdf.student-report', $data)->render();
+
+        return \Spatie\LaravelPdf\Facades\Pdf::view('pdf.student-report', $data)
+            ->format('a4')
+            ->name("{$student->name}_成绩报告.pdf");
+    }
+
     public function destroy(string $id): \Illuminate\Http\JsonResponse
     {
         try {
