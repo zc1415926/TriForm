@@ -15,7 +15,7 @@ import type { BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: '个人资料设置',
         href: edit().url,
     },
 ];
@@ -54,16 +54,16 @@ export default function Profile({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+            <Head title="个人资料设置" />
 
-            <h1 className="sr-only">Profile Settings</h1>
+            <h1 className="sr-only">个人资料设置</h1>
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Profile information"
-                        description="Update your name and email address"
+                        title="个人资料信息"
+                        description="更新您的姓名和邮箱地址"
                     />
 
                     <Form
@@ -76,16 +76,16 @@ export default function Profile({
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
+                                    <Label htmlFor="name" className="text-gray-700 font-medium">姓名</Label>
 
                                     <Input
                                         id="name"
-                                        className="mt-1 block w-full"
+                                        className="mt-1 block w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                         defaultValue={auth.user!.name}
                                         name="name"
                                         required
                                         autoComplete="name"
-                                        placeholder="Full name"
+                                        placeholder="请输入您的姓名"
                                     />
 
                                     <InputError
@@ -95,17 +95,17 @@ export default function Profile({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                    <Label htmlFor="email" className="text-gray-700 font-medium">邮箱地址</Label>
 
                                     <Input
                                         id="email"
                                         type="email"
-                                        className="mt-1 block w-full"
+                                        className="mt-1 block w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                         defaultValue={auth.user!.email}
                                         name="email"
                                         required
                                         autoComplete="username"
-                                        placeholder="Email address"
+                                        placeholder="请输入您的邮箱地址"
                                     />
 
                                     <InputError
@@ -116,26 +116,23 @@ export default function Profile({
 
                                 {mustVerifyEmail &&
                                     auth.user!.email_verified_at === null && (
-                                        <div>
-                                            <p className="-mt-4 text-sm text-muted-foreground">
-                                                Your email address is
-                                                unverified.{' '}
+                                        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                                            <p className="text-sm text-amber-800">
+                                                您的邮箱地址尚未验证。{' '}
                                                 <Link
                                                     href={send()}
                                                     as="button"
-                                                    className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                                    className="font-medium text-amber-900 underline decoration-amber-400 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-amber-600"
                                                 >
-                                                    Click here to resend the
-                                                    verification email.
+                                                    点击此处重新发送验证邮件
                                                 </Link>
                                             </p>
 
                                             {status ===
                                                 'verification-link-sent' && (
-                                                <div className="mt-2 text-sm font-medium text-green-600">
-                                                    A new verification link has
-                                                    been sent to your email
-                                                    address.
+                                                <div className="mt-3 text-sm font-medium text-green-600 flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                                    新的验证链接已发送到您的邮箱
                                                 </div>
                                             )}
                                         </div>
@@ -145,8 +142,9 @@ export default function Profile({
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                                     >
-                                        Save
+                                        保存修改
                                     </Button>
 
                                     <Transition
@@ -156,8 +154,9 @@ export default function Profile({
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
+                                        <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                            已保存
                                         </p>
                                     </Transition>
                                 </div>

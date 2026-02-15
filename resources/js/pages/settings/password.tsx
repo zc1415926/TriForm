@@ -14,7 +14,7 @@ import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: '密码设置',
         href: edit().url,
     },
 ];
@@ -25,16 +25,16 @@ export default function Password() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Password settings" />
+            <Head title="密码设置" />
 
-            <h1 className="sr-only">Password Settings</h1>
+            <h1 className="sr-only">密码设置</h1>
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Update password"
-                        description="Ensure your account is using a long, random password to stay secure"
+                        title="修改密码"
+                        description="请使用强度较高的密码以确保账户安全"
                     />
 
                     <Form
@@ -62,8 +62,8 @@ export default function Password() {
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="current_password">
-                                        Current password
+                                    <Label htmlFor="current_password" className="text-gray-700 font-medium">
+                                        当前密码
                                     </Label>
 
                                     <Input
@@ -71,9 +71,9 @@ export default function Password() {
                                         ref={currentPasswordInput}
                                         name="current_password"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="mt-1 block w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                         autoComplete="current-password"
-                                        placeholder="Current password"
+                                        placeholder="请输入当前密码"
                                     />
 
                                     <InputError
@@ -82,8 +82,8 @@ export default function Password() {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password">
-                                        New password
+                                    <Label htmlFor="password" className="text-gray-700 font-medium">
+                                        新密码
                                     </Label>
 
                                     <Input
@@ -91,26 +91,26 @@ export default function Password() {
                                         ref={passwordInput}
                                         name="password"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="mt-1 block w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                         autoComplete="new-password"
-                                        placeholder="New password"
+                                        placeholder="请输入新密码"
                                     />
 
                                     <InputError message={errors.password} />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">
-                                        Confirm password
+                                    <Label htmlFor="password_confirmation" className="text-gray-700 font-medium">
+                                        确认新密码
                                     </Label>
 
                                     <Input
                                         id="password_confirmation"
                                         name="password_confirmation"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="mt-1 block w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                         autoComplete="new-password"
-                                        placeholder="Confirm password"
+                                        placeholder="请再次输入新密码"
                                     />
 
                                     <InputError
@@ -122,8 +122,9 @@ export default function Password() {
                                     <Button
                                         disabled={processing}
                                         data-test="update-password-button"
+                                        className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                                     >
-                                        Save password
+                                        保存密码
                                     </Button>
 
                                     <Transition
@@ -133,8 +134,9 @@ export default function Password() {
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
+                                        <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                            已保存
                                         </p>
                                     </Transition>
                                 </div>

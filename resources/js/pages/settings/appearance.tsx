@@ -8,7 +8,7 @@ import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
+        title: '外观设置',
         href: editAppearance().url,
     },
 ];
@@ -16,16 +16,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Appearance() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Appearance settings" />
+            <Head title="外观设置" />
 
-            <h1 className="sr-only">Appearance Settings</h1>
+            <h1 className="sr-only">外观设置</h1>
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Appearance settings"
-                        description="Update your account's appearance settings"
+                        title="外观设置"
+                        description="自定义系统的外观主题和显示模式"
                     />
                     <AppearanceTabs />
                 </div>

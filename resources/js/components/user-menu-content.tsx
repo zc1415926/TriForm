@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, User as UserIcon, Sparkles } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -35,27 +35,27 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
-                        className="block w-full cursor-pointer"
+                        className="block w-full cursor-pointer rounded-lg hover:bg-blue-50"
                         href={edit()}
                         prefetch
                         onClick={cleanup}
                     >
-                        <Settings className="mr-2" />
-                        Settings
+                        <Settings className="mr-2 h-4 w-4 text-blue-500" />
+                        <span className="font-medium">设置</span>
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
                 <Link
-                    className="block w-full cursor-pointer"
+                    className="block w-full cursor-pointer rounded-lg hover:bg-red-50 text-red-600"
                     href={logout()}
                     as="button"
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <LogOut className="mr-2" />
-                    Log out
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span className="font-medium">退出登录</span>
                 </Link>
             </DropdownMenuItem>
         </>
