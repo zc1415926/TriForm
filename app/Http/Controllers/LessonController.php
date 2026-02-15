@@ -81,25 +81,29 @@ class LessonController extends Controller
             'assignments.*.is_published' => 'required|boolean',
         ]);
 
-        $lesson = Lesson::create([
-            'name' => $validated['name'],
-            'year' => $validated['year'],
-            'is_active' => $validated['is_active'],
-            'content' => $validated['content'] ?? null,
-        ]);
+        $lesson = \DB::transaction(function () use ($validated): Lesson {
+            $lesson = Lesson::create([
+                'name' => $validated['name'],
+                'year' => $validated['year'],
+                'is_active' => $validated['is_active'],
+                'content' => $validated['content'] ?? null,
+            ]);
 
-        // 创建作业
-        if (! empty($validated['assignments'])) {
-            foreach ($validated['assignments'] as $assignmentData) {
-                Assignment::create([
-                    'name' => $assignmentData['name'],
-                    'upload_type_id' => $assignmentData['upload_type_id'],
-                    'lesson_id' => $lesson->id,
-                    'is_required' => $assignmentData['is_required'],
-                    'is_published' => $assignmentData['is_published'],
-                ]);
+            // 创建作业
+            if (! empty($validated['assignments'])) {
+                foreach ($validated['assignments'] as $assignmentData) {
+                    Assignment::create([
+                        'name' => $assignmentData['name'],
+                        'upload_type_id' => $assignmentData['upload_type_id'],
+                        'lesson_id' => $lesson->id,
+                        'is_required' => $assignmentData['is_required'],
+                        'is_published' => $assignmentData['is_published'],
+                    ]);
+                }
             }
-        }
+
+            return $lesson;
+        });
 
         return redirect()->route('lessons.index')
             ->with('success', '课时创建成功')
@@ -134,26 +138,28 @@ class LessonController extends Controller
             'assignments.*.is_published' => 'required|boolean',
         ]);
 
-        $lesson->update([
-            'name' => $validated['name'],
-            'year' => $validated['year'],
-            'is_active' => $validated['is_active'],
-            'content' => $validated['content'] ?? null,
-        ]);
+        \DB::transaction(function () use ($lesson, $validated): void {
+            $lesson->update([
+                'name' => $validated['name'],
+                'year' => $validated['year'],
+                'is_active' => $validated['is_active'],
+                'content' => $validated['content'] ?? null,
+            ]);
 
-        // 更新作业（删除原有作业，创建新作业）
-        if (isset($validated['assignments'])) {
-            $lesson->assignments()->delete();
-            foreach ($validated['assignments'] as $assignmentData) {
-                Assignment::create([
-                    'name' => $assignmentData['name'],
-                    'upload_type_id' => $assignmentData['upload_type_id'],
-                    'lesson_id' => $lesson->id,
-                    'is_required' => $assignmentData['is_required'],
-                    'is_published' => $assignmentData['is_published'],
-                ]);
+            // 更新作业（删除原有作业，创建新作业）
+            if (isset($validated['assignments'])) {
+                $lesson->assignments()->delete();
+                foreach ($validated['assignments'] as $assignmentData) {
+                    Assignment::create([
+                        'name' => $assignmentData['name'],
+                        'upload_type_id' => $assignmentData['upload_type_id'],
+                        'lesson_id' => $lesson->id,
+                        'is_required' => $assignmentData['is_required'],
+                        'is_published' => $assignmentData['is_published'],
+                    ]);
+                }
             }
-        }
+        });
 
         return redirect()->route('lessons.index')->with('success', '课时更新成功');
     }
@@ -170,33 +176,37 @@ class LessonController extends Controller
      */
     public function duplicate(Lesson $lesson): \Illuminate\Http\RedirectResponse
     {
-        // 复制课时基本信息
-        $newLesson = $lesson->replicate();
-        $newLesson->name = $lesson->name.' (副本)';
-        $newLesson->is_active = false; // 默认禁用，需要手动启用
-        $newLesson->save();
+        $newLesson = \DB::transaction(function () use ($lesson): Lesson {
+            // 复制课时基本信息
+            $newLesson = $lesson->replicate();
+            $newLesson->name = $lesson->name.' (副本)';
+            $newLesson->is_active = false; // 默认禁用，需要手动启用
+            $newLesson->save();
 
-        // 复制作业
-        foreach ($lesson->assignments as $assignment) {
-            $newAssignment = $assignment->replicate();
-            $newAssignment->lesson_id = $newLesson->id;
-            $newAssignment->save();
-        }
-
-        // 复制附件
-        foreach ($lesson->attachments as $attachment) {
-            $newAttachment = $attachment->replicate();
-            $newAttachment->lesson_id = $newLesson->id;
-            $newAttachment->save();
-
-            // 复制文件
-            if (Storage::disk('public')->exists($attachment->file_path)) {
-                $newPath = str_replace($lesson->id.'_', $newLesson->id.'_', $attachment->file_path);
-                Storage::disk('public')->copy($attachment->file_path, $newPath);
-                $newAttachment->file_path = $newPath;
-                $newAttachment->save();
+            // 复制作业
+            foreach ($lesson->assignments as $assignment) {
+                $newAssignment = $assignment->replicate();
+                $newAssignment->lesson_id = $newLesson->id;
+                $newAssignment->save();
             }
-        }
+
+            // 复制附件
+            foreach ($lesson->attachments as $attachment) {
+                $newAttachment = $attachment->replicate();
+                $newAttachment->lesson_id = $newLesson->id;
+                $newAttachment->save();
+
+                // 复制文件
+                if (Storage::disk('public')->exists($attachment->file_path)) {
+                    $newPath = str_replace($lesson->id.'_', $newLesson->id.'_', $attachment->file_path);
+                    Storage::disk('public')->copy($attachment->file_path, $newPath);
+                    $newAttachment->file_path = $newPath;
+                    $newAttachment->save();
+                }
+            }
+
+            return $newLesson;
+        });
 
         return redirect()->route('lessons.index')->with('success', '课时复制成功');
     }

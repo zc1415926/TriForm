@@ -272,11 +272,11 @@ class SubmissionController extends Controller
 
             if ($existingSubmission) {
                 // 删除旧文件（使用 Storage facade 处理）
-                \Storage::disk('public')->delete($existingSubmission->file_path);
+                Storage::disk('public')->delete($existingSubmission->file_path);
 
                 // 删除旧预览图
                 if ($existingSubmission->preview_image_path) {
-                    \Storage::disk('public')->delete($existingSubmission->preview_image_path);
+                    Storage::disk('public')->delete($existingSubmission->preview_image_path);
                 }
 
                 // 更新提交记录
@@ -355,69 +355,89 @@ class SubmissionController extends Controller
 
     public function destroy(string $id): \Illuminate\Http\JsonResponse
     {
-        $submission = Submission::findOrFail($id);
+        try {
+            $submission = Submission::findOrFail($id);
 
-        // 删除文件
-        Storage::disk('public')->delete($submission->file_path);
+            // 使用事务确保数据一致性
+            \DB::transaction(function () use ($submission): void {
+                // 删除数据库记录
+                $submission->delete();
 
-        // 删除预览图（如果存在）
-        if ($submission->preview_image_path) {
-            Storage::disk('public')->delete($submission->preview_image_path);
+                // 删除文件
+                Storage::disk('public')->delete($submission->file_path);
+
+                // 删除预览图（如果存在）
+                if ($submission->preview_image_path) {
+                    Storage::disk('public')->delete($submission->preview_image_path);
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => '删除成功',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '删除失败：'.$e->getMessage(),
+            ], 500);
         }
-
-        // 删除数据库记录
-        $submission->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => '删除成功',
-        ]);
     }
 
     public function uploadPreview(Request $request, string $id): \Illuminate\Http\JsonResponse
     {
-        $validated = $request->validate([
-            'preview_image' => 'required|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'preview_image' => 'required|string',
+            ]);
 
-        $submission = Submission::findOrFail($id);
+            $submission = Submission::findOrFail($id);
 
-        // 解码 base64 图片
-        $base64Image = $validated['preview_image'];
-        if (str_starts_with($base64Image, 'data:image')) {
-            $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
-        }
+            // 解码 base64 图片
+            $base64Image = $validated['preview_image'];
+            if (str_starts_with($base64Image, 'data:image')) {
+                $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+            }
 
-        $imageData = base64_decode($base64Image);
-        if ($imageData === false) {
+            $imageData = base64_decode($base64Image);
+            if ($imageData === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '无效的图片数据',
+                ], 400);
+            }
+
+            // 生成文件名
+            $fileName = uniqid('vox_preview_').'.png';
+            $storagePath = "submissions/{$submission->assignment->lesson->id}/{$submission->assignment->id}";
+            $previewPath = $storagePath.'/'.$fileName;
+
+            // 使用事务确保数据一致性
+            \DB::transaction(function () use ($submission, $previewPath, $imageData): void {
+                // 删除旧的预览图
+                if ($submission->preview_image_path) {
+                    Storage::disk('public')->delete($submission->preview_image_path);
+                }
+
+                // 保存新图片
+                Storage::disk('public')->put($previewPath, $imageData);
+
+                // 更新数据库
+                $submission->update([
+                    'preview_image_path' => $previewPath,
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'preview_image_path' => $previewPath,
+                'message' => '预览图上传成功',
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => '无效的图片数据',
-            ], 400);
+                'message' => '上传失败：'.$e->getMessage(),
+            ], 500);
         }
-
-        // 生成文件名
-        $fileName = uniqid('vox_preview_').'.png';
-        $storagePath = "submissions/{$submission->assignment->lesson->id}/{$submission->assignment->id}";
-
-        // 删除旧的预览图
-        if ($submission->preview_image_path) {
-            Storage::disk('public')->delete($submission->preview_image_path);
-        }
-
-        // 保存新图片
-        $previewPath = $storagePath.'/'.$fileName;
-        Storage::disk('public')->put($previewPath, $imageData);
-
-        // 更新数据库
-        $submission->update([
-            'preview_image_path' => $previewPath,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'preview_image_path' => $previewPath,
-            'message' => '预览图上传成功',
-        ]);
     }
 }
