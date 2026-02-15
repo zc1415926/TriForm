@@ -58,6 +58,9 @@ interface Student {
     id: number;
     name: string;
     year: string;
+    grade: number;
+    class: number;
+    avatar: string | null;
 }
 
 interface Lesson {
@@ -699,8 +702,8 @@ export default function SubmissionShow() {
                                                         />
                                                     </TableHead>
                                                 )}
-                                                <TableHead className="font-semibold text-gray-700">学生姓名</TableHead>
-                                                <TableHead className="font-semibold text-gray-700">文件名</TableHead>
+                                                <TableHead className="font-semibold text-gray-700 w-32">作业截图</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">学生信息</TableHead>
                                                 <TableHead className="font-semibold text-gray-700">文件大小</TableHead>
                                                 <TableHead className="font-semibold text-gray-700">提交时间</TableHead>
                                                 <TableHead className="font-semibold text-gray-700">状态</TableHead>
@@ -721,8 +724,47 @@ export default function SubmissionShow() {
                                                             />
                                                         </TableCell>
                                                     )}
-                                                    <TableCell className="font-medium">{submission.student.name}</TableCell>
-                                                    <TableCell className="text-gray-600">{submission.file_name}</TableCell>
+                                                    {/* 作业截图 */}
+                                                    <TableCell>
+                                                        {submission.preview_image_path ? (
+                                                            <div 
+                                                                className="w-24 h-16 rounded-lg overflow-hidden cursor-pointer border border-gray-200 hover:border-blue-400 transition-colors"
+                                                                onClick={() => handleViewPreview(submission.preview_image_path!)}
+                                                            >
+                                                                <img 
+                                                                    src={`/storage/${submission.preview_image_path}`}
+                                                                    alt="作业截图"
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-24 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-200">
+                                                                暂无截图
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+                                                    {/* 学生信息：头像 + 姓名/年级班级/年份 */}
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            {submission.student.avatar ? (
+                                                                <img 
+                                                                    src={`/storage/${submission.student.avatar}`}
+                                                                    alt={submission.student.name}
+                                                                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-medium text-sm">
+                                                                    {submission.student.name.charAt(0)}
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <div className="font-medium text-gray-900">{submission.student.name}</div>
+                                                                <div className="text-xs text-gray-500">
+                                                                    {submission.student.grade}年级{submission.student.class}班 · {submission.student.year}年入学
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
                                                     <TableCell className="text-gray-500">{formatFileSize(submission.file_size)}</TableCell>
                                                     <TableCell className="text-gray-500 text-sm">{formatDate(submission.created_at)}</TableCell>
                                                     <TableCell>{getStatusBadge(submission.status)}</TableCell>
@@ -737,16 +779,6 @@ export default function SubmissionShow() {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-2">
-                                                            {submission.preview_image_path && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
-                                                                    onClick={() => handleViewPreview(submission.preview_image_path!)}
-                                                                >
-                                                                    预览图
-                                                                </Button>
-                                                            )}
                                                             {/* STL/OBJ 文件显示查看按钮 */}
                                                             {['stl', 'obj'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
                                                                 <Button

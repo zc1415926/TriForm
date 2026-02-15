@@ -47,7 +47,7 @@ class SubmissionController extends Controller
     public function getAllSubmissions(Request $request): \Illuminate\Http\JsonResponse
     {
         $query = Submission::with([
-            'student:id,name,year',
+            'student:id,name,year,grade,class,avatar',
             'assignment:id,name,lesson_id',
             'assignment.lesson:id,name',
         ]);
