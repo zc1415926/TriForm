@@ -17,6 +17,10 @@ Route::get('submissions/gallery', [SubmissionController::class, 'gallery'])->nam
 Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
 Route::post('submissions', [SubmissionController::class, 'store'])->name('submissions.store');
 
+// 学生登录和个人中心 - 公开访问
+Route::inertia('student/login', 'student/login')->name('student.login');
+Route::inertia('student/dashboard', 'student/dashboard')->name('student.dashboard');
+
 // 需要认证的路由
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

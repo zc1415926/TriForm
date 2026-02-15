@@ -19,7 +19,10 @@ import {
     Palette,
     Trophy,
     Star,
-    Calendar
+    Calendar,
+    Heart,
+    Share2,
+    Upload
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -82,6 +85,7 @@ interface Submission {
     preview_image_path: string | null;
     status: string;
     score: number | null;
+    likes_count?: number;
     created_at: string;
     student: Student;
     assignment: Assignment;
@@ -320,6 +324,49 @@ export default function SubmissionGallery() {
         model: submissions.filter(s => getFileTypeInfo(s.file_name).type === 'model').length,
         vox: submissions.filter(s => getFileTypeInfo(s.file_name).type === 'vox').length,
         scored: submissions.filter(s => s.score !== null).length,
+    };
+
+    // 处理点赞
+    const handleLike = async (submissionId: number) => {
+        try {
+            await axios.post(`/api/submissions/${submissionId}/like`);
+            // 更新本地点赞数
+            setSubmissions(prev => prev.map(s => 
+                s.id === submissionId 
+                    ? { ...s, likes_count: (s.likes_count || 0) + 1 }
+                    : s
+            ));
+        } catch (error) {
+            console.error('点赞失败:', error);
+        }
+    };
+
+    // 处理分享
+    const handleShare = (submission: Submission) => {
+        const shareData = {
+            title: `${submission.student.name}的3D作品`,
+            text: `来看看${submission.student.name}在${submission.assignment.lesson?.name || '3D课程'}的作品！`,
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData);
+        } else {
+            // 复制链接到剪贴板
+            navigator.clipboard.writeText(window.location.href);
+            alert('链接已复制到剪贴板！');
+        }
+    };
+
+    // 处理"我也做一个"
+    const handleCreateSimilar = (submission: Submission) => {
+        // 保存选择的课时和作业到 localStorage
+        if (submission.assignment) {
+            localStorage.setItem('preferredLessonId', submission.assignment.lesson_id?.toString() || '');
+            localStorage.setItem('preferredAssignmentId', submission.assignment_id.toString());
+        }
+        // 跳转到提交页面
+        window.location.href = '/submissions';
     };
 
     return (
@@ -588,6 +635,46 @@ export default function SubmissionGallery() {
                                             <div className="text-xs text-gray-400">
                                                 {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                                             </div>
+                                        </div>
+                                        
+                                        {/* 互动按钮 */}
+                                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="flex-1 h-8 text-gray-500 hover:text-pink-500 hover:bg-pink-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleLike(submission.id);
+                                                }}
+                                            >
+                                                <Heart className="w-4 h-4 mr-1" />
+                                                <span className="text-xs">{submission.likes_count || 0}</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="flex-1 h-8 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleShare(submission);
+                                                }}
+                                            >
+                                                <Share2 className="w-4 h-4 mr-1" />
+                                                <span className="text-xs">分享</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="flex-1 h-8 text-gray-500 hover:text-green-500 hover:bg-green-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCreateSimilar(submission);
+                                                }}
+                                            >
+                                                <Upload className="w-4 h-4 mr-1" />
+                                                <span className="text-xs">我也做</span>
+                                            </Button>
                                         </div>
                                     </CardContent>
                                 </Card>

@@ -24,6 +24,13 @@ Route::middleware(['web'])->group(function () {
         Route::get('/assignments-by-lesson', [SubmissionController::class, 'getAssignmentsByLesson'])->name('assignments-by-lesson');
         Route::get('/submissions-by-assignment', [SubmissionController::class, 'getSubmissionsByAssignment'])->name('submissions-by-assignment');
         Route::get('/all', [SubmissionController::class, 'getAllSubmissions'])->name('all');
+        Route::post('/{id}/like', [SubmissionController::class, 'likeSubmission'])->name('like');
+    });
+
+    // 学生相关 API
+    Route::prefix('student')->name('api.student.')->group(function () {
+        Route::post('/login', [SubmissionController::class, 'studentLogin'])->name('login');
+        Route::get('/dashboard', [SubmissionController::class, 'studentDashboard'])->name('dashboard');
     });
 
     // 需要认证的 API
