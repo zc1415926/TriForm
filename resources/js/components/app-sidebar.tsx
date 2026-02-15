@@ -54,15 +54,17 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <SidebarMenu>
-                    {/* Dashboard - 所有用户可见 */}
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Dashboard">
-                            <Link href={dashboard()}>
-                                <LayoutGrid />
-                                <span>Dashboard</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {/* 仪表盘 - 学生可见（独立菜单），管理员/教师在教学管理下 */}
+                    {!canAccessManagement && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="仪表盘">
+                                <Link href={dashboard()}>
+                                    <LayoutGrid />
+                                    <span>仪表盘</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
 
                     {/* 教学管理菜单 - 仅管理员和教师可见，始终展开 */}
                     {canAccessManagement && (
@@ -74,6 +76,14 @@ export function AppSidebar() {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuSub>
+                                <SidebarMenuSubItem>
+                                    <SidebarMenuSubButton asChild>
+                                        <Link href={dashboard()}>
+                                            <LayoutGrid />
+                                            <span>仪表盘</span>
+                                        </Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
                                 <SidebarMenuSubItem>
                                     <SidebarMenuSubButton asChild>
                                         <Link href="/submissions/show">
