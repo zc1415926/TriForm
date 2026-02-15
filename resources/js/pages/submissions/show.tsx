@@ -37,6 +37,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
+import { Eye, Calendar, BookOpen, FileText, Trash2, Download, Sparkles } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -453,177 +454,242 @@ export default function SubmissionShow() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="查看作品" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">查看作品</h1>
-                </div>
-
-                <div className="rounded-md border p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* 年份筛选 */}
-                        <div className="space-y-2">
-                            <Label htmlFor="year">年份</Label>
-                            <Select onValueChange={handleYearChange} value={selectedYear} disabled={loading}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="请选择年份" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {years.map((year) => (
-                                        <SelectItem key={year} value={year}>
-                                            {year}年
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+            <div className="space-y-6 p-6 max-w-7xl mx-auto">
+                {/* 页面标题区域 */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-8 text-white shadow-xl">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-50" />
+                    <div className="relative z-10 flex items-center gap-4">
+                        <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <Eye className="w-8 h-8" />
                         </div>
-
-                        {/* 课时筛选 */}
-                        <div className="space-y-2">
-                            <Label htmlFor="lesson">课时</Label>
-                            {loading && lessons.length === 0 && selectedYear ? (
-                                <div className="text-sm text-muted-foreground">加载中...</div>
-                            ) : (
-                                <Select onValueChange={handleLessonChange} value={selectedLesson} disabled={loading || !selectedYear || lessons.length === 0}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={!selectedYear ? "请先选择年份" : "请选择课时"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {lessons.map((lesson) => (
-                                            <SelectItem key={lesson.id} value={lesson.id.toString()}>
-                                                {lesson.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        </div>
-
-                        {/* 作业筛选 */}
-                        <div className="space-y-2">
-                            <Label htmlFor="assignment">作业</Label>
-                            {loading && assignments.length === 0 && selectedLesson ? (
-                                <div className="text-sm text-muted-foreground">加载中...</div>
-                            ) : (
-                                <Select onValueChange={handleAssignmentChange} value={selectedAssignment} disabled={loading || !selectedLesson}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={!selectedLesson ? "请先选择课时" : "所有作业"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {selectedLesson && <SelectItem value="all">所有作业</SelectItem>}
-                                        {assignments.map((assignment) => (
-                                            <SelectItem key={assignment.id} value={assignment.id.toString()}>
-                                                {assignment.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
+                        <div>
+                            <h1 className="text-3xl font-bold">查看作品</h1>
+                            <p className="text-indigo-100">浏览、评分和管理学生提交的作品</p>
                         </div>
                     </div>
                 </div>
 
+                {/* 筛选区域 */}
+                <Card className="border-0 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 py-4">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-amber-500" />
+                            <CardTitle className="text-lg">筛选条件</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* 年份筛选 */}
+                            <div className="space-y-2">
+                                <Label htmlFor="year" className="flex items-center gap-2 text-base font-medium">
+                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                    年份
+                                </Label>
+                                <Select onValueChange={handleYearChange} value={selectedYear} disabled={loading}>
+                                    <SelectTrigger className="rounded-xl h-12">
+                                        <SelectValue placeholder="请选择年份" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {years.map((year) => (
+                                            <SelectItem key={year} value={year}>
+                                                {year}年
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* 课时筛选 */}
+                            <div className="space-y-2">
+                                <Label htmlFor="lesson" className="flex items-center gap-2 text-base font-medium">
+                                    <BookOpen className="w-4 h-4 text-green-500" />
+                                    课时
+                                </Label>
+                                {loading && lessons.length === 0 && selectedYear ? (
+                                    <div className="flex items-center gap-2 text-gray-400 h-12">
+                                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        加载中...
+                                    </div>
+                                ) : (
+                                    <Select onValueChange={handleLessonChange} value={selectedLesson} disabled={loading || !selectedYear || lessons.length === 0}>
+                                        <SelectTrigger className="rounded-xl h-12">
+                                            <SelectValue placeholder={!selectedYear ? "请先选择年份" : "请选择课时"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {lessons.map((lesson) => (
+                                                <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                                                    {lesson.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
+
+                            {/* 作业筛选 */}
+                            <div className="space-y-2">
+                                <Label htmlFor="assignment" className="flex items-center gap-2 text-base font-medium">
+                                    <FileText className="w-4 h-4 text-purple-500" />
+                                    作业
+                                </Label>
+                                {loading && assignments.length === 0 && selectedLesson ? (
+                                    <div className="flex items-center gap-2 text-gray-400 h-12">
+                                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        加载中...
+                                    </div>
+                                ) : (
+                                    <Select onValueChange={handleAssignmentChange} value={selectedAssignment} disabled={loading || !selectedLesson}>
+                                        <SelectTrigger className="rounded-xl h-12">
+                                            <SelectValue placeholder={!selectedLesson ? "请先选择课时" : "所有作业"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {selectedLesson && <SelectItem value="all">所有作业</SelectItem>}
+                                            {assignments.map((assignment) => (
+                                                <SelectItem key={assignment.id} value={assignment.id.toString()}>
+                                                    {assignment.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* 提交记录列表 */}
                 {selectedYear && selectedLesson && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>提交记录 ({submissions.length})</CardTitle>
+                    <Card className="border-0 shadow-lg overflow-hidden">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                                        <FileText className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <CardTitle>提交记录</CardTitle>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            共 {submissions.length} 条记录
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-0">
                             {loading ? (
-                                <div className="text-sm text-muted-foreground">加载中...</div>
+                                <div className="flex items-center justify-center gap-2 text-gray-400 py-12">
+                                    <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    加载中...
+                                </div>
                             ) : submissions.length > 0 ? (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>学生姓名</TableHead>
-                                            <TableHead>文件名</TableHead>
-                                            <TableHead>文件大小</TableHead>
-                                            <TableHead>提交时间</TableHead>
-                                            <TableHead>状态</TableHead>
-                                            <TableHead>分数</TableHead>
-                                            <TableHead>操作</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {submissions.map((submission) => (
-                                            <TableRow key={submission.id}>
-                                                <TableCell>{submission.student.name}</TableCell>
-                                                <TableCell>{submission.file_name}</TableCell>
-                                                <TableCell>{formatFileSize(submission.file_size)}</TableCell>
-                                                <TableCell>{formatDate(submission.created_at)}</TableCell>
-                                                <TableCell>{getStatusBadge(submission.status)}</TableCell>
-                                                <TableCell>
-                                                    {submission.score !== null ? (
-                                                        <Badge variant="default" className="bg-blue-600">
-                                                            {submission.score} 分
-                                                        </Badge>
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-sm">未评分</span>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex gap-2">
-                                                        {submission.preview_image_path && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewPreview(submission.preview_image_path!)}
-                                                            >
-                                                                预览图
-                                                            </Button>
-                                                        )}
-                                                        {/* STL/OBJ 文件显示查看按钮 */}
-                                                        {['stl', 'obj'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewModel(submission.file_path, submission.file_name, submission)}
-                                                            >
-                                                                查看
-                                                            </Button>
-                                                        )}
-                                                        {/* VOX 文件显示查看按钮 */}
-                                                        {submission.file_name.toLowerCase().endsWith('.vox') && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewVox(submission.file_path, submission.file_name, submission)}
-                                                            >
-                                                                查看
-                                                            </Button>
-                                                        )}
-                                                        {/* 图片文件显示查看按钮 */}
-                                                        {['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewImage(submission.file_path, submission.file_name, submission)}
-                                                            >
-                                                                查看
-                                                            </Button>
-                                                        )}
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleDownload(submission.file_path, submission.file_name)}
-                                                        >
-                                                            下载
-                                                        </Button>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() => handleDeleteClick(submission)}
-                                                        >
-                                                            删除
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
+                                                <TableHead className="font-semibold text-gray-700">学生姓名</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">文件名</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">文件大小</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">提交时间</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">状态</TableHead>
+                                                <TableHead className="font-semibold text-gray-700">分数</TableHead>
+                                                <TableHead className="font-semibold text-gray-700 text-right">操作</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {submissions.map((submission) => (
+                                                <TableRow key={submission.id} className="hover:bg-blue-50/30 transition-colors">
+                                                    <TableCell className="font-medium">{submission.student.name}</TableCell>
+                                                    <TableCell className="text-gray-600">{submission.file_name}</TableCell>
+                                                    <TableCell className="text-gray-500">{formatFileSize(submission.file_size)}</TableCell>
+                                                    <TableCell className="text-gray-500 text-sm">{formatDate(submission.created_at)}</TableCell>
+                                                    <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                                                    <TableCell>
+                                                        {submission.score !== null ? (
+                                                            <Badge variant="default" className="bg-gradient-to-r from-blue-500 to-blue-600">
+                                                                {submission.score} 分
+                                                            </Badge>
+                                                        ) : (
+                                                            <span className="text-muted-foreground text-sm">未评分</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            {submission.preview_image_path && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                                                                    onClick={() => handleViewPreview(submission.preview_image_path!)}
+                                                                >
+                                                                    预览图
+                                                                </Button>
+                                                            )}
+                                                            {/* STL/OBJ 文件显示查看按钮 */}
+                                                            {['stl', 'obj'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200"
+                                                                    onClick={() => handleViewModel(submission.file_path, submission.file_name, submission)}
+                                                                >
+                                                                    查看
+                                                                </Button>
+                                                            )}
+                                                            {/* VOX 文件显示查看按钮 */}
+                                                            {submission.file_name.toLowerCase().endsWith('.vox') && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200"
+                                                                    onClick={() => handleViewVox(submission.file_path, submission.file_name, submission)}
+                                                                >
+                                                                    查看
+                                                                </Button>
+                                                            )}
+                                                            {/* 图片文件显示查看按钮 */}
+                                                            {['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(submission.file_name.split('.').pop()?.toLowerCase() || '') && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200"
+                                                                    onClick={() => handleViewImage(submission.file_path, submission.file_name, submission)}
+                                                                >
+                                                                    查看
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="rounded-lg hover:bg-green-50 hover:text-green-600 hover:border-green-200"
+                                                                onClick={() => handleDownload(submission.file_path, submission.file_name)}
+                                                            >
+                                                                <Download className="w-4 h-4 mr-1" />
+                                                                下载
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                                                                onClick={() => handleDeleteClick(submission)}
+                                                            >
+                                                                <Trash2 className="w-4 h-4 mr-1" />
+                                                                删除
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             ) : (
-                                <div className="text-sm text-muted-foreground">暂无提交记录</div>
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <FileText className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <p className="text-gray-500 font-medium">暂无提交记录</p>
+                                    <p className="text-gray-400 text-sm mt-1">请调整筛选条件查看其他作品</p>
+                                </div>
                             )}
                         </CardContent>
                     </Card>
@@ -1137,24 +1203,32 @@ export default function SubmissionShow() {
 
             {/* 删除确认模态框 */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>确认删除</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader className="text-center pb-4">
+                        <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <DialogTitle className="text-xl">确认删除</DialogTitle>
+                        <DialogDescription className="text-center">
                             确定要删除以下提交记录吗？此操作不可恢复。
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4 p-3 bg-muted rounded-md">
-                        <p className="text-sm font-medium">文件名：{submissionToDelete?.file_name}</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                    <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+                        <p className="text-sm font-medium text-gray-800">文件名：{submissionToDelete?.file_name}</p>
+                        <p className="text-sm text-gray-600 mt-1">
                             学生：{submissionToDelete?.student.name}
                         </p>
                     </div>
-                    <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={handleDeleteCancel} disabled={isDeleting}>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button variant="outline" onClick={handleDeleteCancel} disabled={isDeleting} className="rounded-xl px-6">
                             取消
                         </Button>
-                        <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
+                        <Button 
+                            variant="destructive" 
+                            onClick={handleDeleteConfirm} 
+                            disabled={isDeleting}
+                            className="rounded-xl px-6 bg-gradient-to-r from-red-500 to-red-600"
+                        >
                             {isDeleting ? '删除中...' : '确认删除'}
                         </Button>
                     </div>
