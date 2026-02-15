@@ -9,16 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/login';
-import { request } from '@/routes/password';
 
 type Props = {
     status?: string;
-    canResetPassword: boolean;
 };
 
 export default function Login({
     status,
-    canResetPassword,
 }: Props) {
     return (
         <AuthLayout
@@ -56,21 +53,10 @@ export default function Login({
                             </div>
 
                             <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password" className="text-gray-700 font-medium flex items-center gap-2">
-                                        <Lock className="w-4 h-4 text-gray-400" />
-                                        密码
-                                    </Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            忘记密码？
-                                        </TextLink>
-                                    )}
-                                </div>
+                                <Label htmlFor="password" className="text-gray-700 font-medium flex items-center gap-2">
+                                    <Lock className="w-4 h-4 text-gray-400" />
+                                    密码
+                                </Label>
                                 <Input
                                     id="password"
                                     type="password"
