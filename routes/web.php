@@ -21,13 +21,13 @@ Route::post('submissions', [SubmissionController::class, 'store'])->name('submis
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // 学生管理
-    Route::resource('students', StudentController::class);
+    // 学生管理 - 自定义路由必须在 resource 之前定义
+    Route::inertia('students/report', 'students/report')->name('students.report');
+    Route::inertia('students/class-report', 'students/class-report')->name('students.class-report');
     Route::get('students/template/download', [StudentController::class, 'downloadTemplate'])->name('students.template.download');
     Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
     Route::get('students/export/all', [StudentController::class, 'export'])->name('students.export');
-    Route::inertia('students/report', 'students/report')->name('students.report');
-    Route::inertia('students/class-report', 'students/class-report')->name('students.class-report');
+    Route::resource('students', StudentController::class);
 
     // 课时管理
     Route::resource('lessons', LessonController::class);
