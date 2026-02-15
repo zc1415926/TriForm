@@ -37,7 +37,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
-import { Eye, Calendar, BookOpen, FileText, Trash2, Download, Sparkles } from 'lucide-react';
+import { Eye, Calendar, BookOpen, FileText, Trash2, Download, Sparkles, Award } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
