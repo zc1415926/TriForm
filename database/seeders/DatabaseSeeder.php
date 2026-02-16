@@ -8,7 +8,11 @@ use App\Models\Student;
 use App\Models\Submission;
 use App\Models\UploadType;
 use App\Models\User;
+use App\Services\PreviewGenerator;
+use App\Services\StlGenerator;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -198,12 +202,15 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 创建提交记录
+     * 创建提交记录（包含真实的 STL 文件和预览图）
      */
     private function createSubmissions($students, $assignments): void
     {
         $grades = ['G', 'A', 'B', 'C'];
         $gradeScores = ['G' => 12, 'A' => 10, 'B' => 8, 'C' => 6];
+
+        // 几何体类型
+        $shapeTypes = ['cube', 'cylinder', 'sphere'];
 
         foreach ($students as $student) {
             // 每个学生随机提交部分作业
@@ -214,16 +221,42 @@ class DatabaseSeeder extends Seeder
                 if (rand(1, 100) <= 80) {
                     $hasScore = rand(1, 100) <= 70; // 70%概率已评分
 
+                    // 构建存储路径
+                    $year = $assignment->lesson->year;
+                    $lessonId = $assignment->lesson->id;
+                    $assignmentId = $assignment->id;
+                    $storagePath = "submissions/{$year}/{$lessonId}/{$assignmentId}";
+
+                    // 确保目录存在
+                    Storage::disk('public')->makeDirectory($storagePath);
+
+                    // 1. 生成 STL 文件
+                    $shapeType = $shapeTypes[array_rand($shapeTypes)];
+                    $stlContent = match ($shapeType) {
+                        'cube' => StlGenerator::cube(rand(8, 15), rand(8, 15), rand(8, 15)),
+                        'cylinder' => StlGenerator::cylinder(rand(3, 6), rand(8, 15), 32),
+                        'sphere' => StlGenerator::sphere(rand(4, 7), 16),
+                    };
+
+                    $stlFileName = Str::random(40).'.stl';
+                    $stlPath = $storagePath.'/'.$stlFileName;
+                    Storage::disk('public')->put($stlPath, $stlContent);
+
+                    // 2. 生成预览图
+                    $shapeName = strtoupper($shapeType);
+                    $previewPath = PreviewGenerator::forSTL($shapeName, $storagePath);
+
+                    // 3. 创建提交记录
                     Submission::firstOrCreate(
                         [
                             'student_id' => $student->id,
                             'assignment_id' => $assignment->id,
                         ],
                         [
-                            'file_path' => 'submissions/'.$assignment->lesson->year.'/'.$assignment->lesson->id.'/'.$assignment->id.'/'.$student->id.'_work.stl',
-                            'file_name' => $student->name.'_作品.stl',
-                            'file_size' => rand(50000, 5000000),
-                            'preview_image_path' => 'previews/'.$student->id.'_preview.png',
+                            'file_path' => $stlPath,
+                            'file_name' => $student->name.'_'.$shapeType.'.stl',
+                            'file_size' => Storage::disk('public')->size($stlPath),
+                            'preview_image_path' => $previewPath,
                             'status' => 'pending',
                             'score' => $hasScore ? $gradeScores[$grades[array_rand($grades)]] : null,
                             'feedback' => $hasScore ? $this->getRandomFeedback() : null,
