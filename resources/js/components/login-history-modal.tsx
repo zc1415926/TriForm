@@ -1,4 +1,15 @@
-import { useState, useEffect } from 'react';
+import {
+    History,
+    User,
+    Eye,
+    AlertTriangle,
+    X,
+    Trash2,
+    Download
+} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -6,19 +17,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-    History,
-    User,
-    Eye,
-    CheckCircle,
-    AlertTriangle,
-    X,
-    Trash2,
-    Download
-} from 'lucide-react';
 import { getBrowserLoginHistory, clearAllRecords, type LoginRecord } from '@/lib/db';
 
 interface LoginHistoryModalProps {
@@ -33,14 +32,7 @@ export function LoginHistoryModal({ isOpen, onClose, teacherName, currentStudent
     const [records, setRecords] = useState<LoginRecord[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (isOpen) {
-            loadRecords();
-        }
-    }, [isOpen, currentStudentId]);
-
-    const loadRecords = async () => {
-        setLoading(true);
+    const loadRecords = useCallback(async () => {
         let data = await getBrowserLoginHistory();
 
         // 如果设置了只显示当前学生的记录
@@ -50,7 +42,17 @@ export function LoginHistoryModal({ isOpen, onClose, teacherName, currentStudent
 
         setRecords(data);
         setLoading(false);
-    };
+    }, [filterByCurrentStudent, currentStudentId]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setLoading(true);
+            // 使用 requestAnimationFrame 避免同步 setState
+            requestAnimationFrame(() => {
+                loadRecords();
+            });
+        }
+    }, [isOpen, loadRecords]);
 
     const handleClear = async () => {
         if (confirm('确定要清空所有本地记录吗？')) {

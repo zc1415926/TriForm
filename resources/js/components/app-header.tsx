@@ -1,6 +1,5 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import axios from '@/lib/axios';
-import { BookOpen, Folder, GraduationCap, LayoutGrid, LogOut, Menu, Search, User } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Folder, GraduationCap, LayoutGrid, LogOut, Menu, Search } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

@@ -3,8 +3,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { login } from '../helpers/auth-helper';
 import { testStudents } from '../fixtures/test-data';
+import { login } from '../helpers/auth-helper';
 import { waitForPageLoad, confirmDialog, selectDropdownOption } from '../helpers/page-helper';
 
 test.describe('学生管理页面', () => {

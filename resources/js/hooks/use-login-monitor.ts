@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getEchoAsync, getEcho } from '@/echo';
 import type { LoginRecord } from '@/lib/db';
+import type { SharedData } from '@/types';
 
 interface BroadcastPayload {
     teacher: {
@@ -13,7 +14,7 @@ interface BroadcastPayload {
 }
 
 export function useLoginMonitor() {
-    const { auth } = usePage().props as { auth: { student?: { id: number; name: string } } };
+    const { auth } = usePage<SharedData>().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teacherName, setTeacherName] = useState<string>('');
     const channelRef = useRef<any>(null);

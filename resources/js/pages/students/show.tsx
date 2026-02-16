@@ -1,13 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import { ArrowLeft, Award, BookOpen, CheckCircle2, Clock, FileText, GraduationCap, Sparkles, Star, Trash2, Trophy, X } from 'lucide-react';
+import { useState } from 'react';
+import { StudentFormDialog } from '@/components/student-form-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { StudentFormDialog } from '@/components/student-form-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { index, update } from '@/routes/students';
 import type { BreadcrumbItem } from '@/types';

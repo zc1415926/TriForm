@@ -1,8 +1,6 @@
 import { Form, Head, router } from '@inertiajs/react';
 import { GraduationCap, Lock, Mail, Sparkles, User, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import axios from '@/lib/axios';
-import { addLoginRecord } from '@/lib/db';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,8 +15,10 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { store } from '@/routes/login';
+import axios from '@/lib/axios';
+import { addLoginRecord } from '@/lib/db';
 import { cn } from '@/lib/utils';
+import { store } from '@/routes/login';
 
 interface Student {
     id: number;

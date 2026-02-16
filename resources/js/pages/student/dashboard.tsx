@@ -1,15 +1,4 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useEffect, useRef, useState } from 'react';
-import axios from '@/lib/axios';
-import { addLoginRecord } from '@/lib/db';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { LoginMonitorWrapper } from '@/components/login-monitor-wrapper';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import {
     Award,
     Upload,
@@ -22,6 +11,17 @@ import {
     ChevronRight,
     Medal
 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { LoginMonitorWrapper } from '@/components/login-monitor-wrapper';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
+import { addLoginRecord } from '@/lib/db';
+import type { BreadcrumbItem } from '@/types';
+import { Progress } from '@/components/ui/progress';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

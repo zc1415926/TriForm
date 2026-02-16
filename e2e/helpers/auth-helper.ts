@@ -2,7 +2,7 @@
  * 认证辅助函数
  */
 
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { testUsers } from '../fixtures/test-data';
 
 /**

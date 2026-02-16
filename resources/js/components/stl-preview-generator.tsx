@@ -16,7 +16,8 @@ import {
 } from '@babylonjs/core';
 import '@babylonjs/loaders';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { VoxParser, VoxelModel, SceneNode } from '@/lib/vox-parser';
+import type { VoxelModel} from '@/lib/vox-parser';
+import { VoxParser, SceneNode } from '@/lib/vox-parser';
 
 interface StlPreviewGeneratorProps {
     file: File | null;

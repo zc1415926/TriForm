@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
 import { Camera, Trash2, Upload, User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {

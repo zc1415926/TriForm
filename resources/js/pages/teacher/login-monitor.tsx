@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
-import axios from '@/lib/axios';
 import {
     Shield,
     Users,
@@ -9,9 +7,9 @@ import {
     CheckCircle,
     Send,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Select,
     SelectContent,
@@ -19,7 +17,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [

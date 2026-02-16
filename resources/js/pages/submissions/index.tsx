@@ -1,5 +1,21 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
 import axios from 'axios';
+import { 
+    Upload, 
+    Calendar, 
+    User, 
+    BookOpen, 
+    FileText, 
+    CheckCircle2, 
+    AlertCircle,
+    Sparkles,
+    Award,
+    Clock,
+    FileUp,
+    Image as ImageIcon,
+    Box,
+    Layers
+} from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
     StlPreviewGenerator 
@@ -35,22 +51,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { store } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Upload, 
-    Calendar, 
-    User, 
-    BookOpen, 
-    FileText, 
-    CheckCircle2, 
-    AlertCircle,
-    Sparkles,
-    Award,
-    Clock,
-    FileUp,
-    Image as ImageIcon,
-    Box,
-    Layers
-} from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

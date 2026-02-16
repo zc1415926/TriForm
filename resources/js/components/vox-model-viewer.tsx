@@ -14,7 +14,8 @@ import {
     AxesViewer,
 } from '@babylonjs/core';
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { VoxParser, VoxelModel, TransformNode } from '@/lib/vox-parser';
+import type { VoxelModel, TransformNode } from '@/lib/vox-parser';
+import { VoxParser } from '@/lib/vox-parser';
 
 export interface VoxModelViewerRef {
     captureScreenshot: () => Promise<string | null>;

@@ -1,3 +1,6 @@
+import { Calendar, BookOpen, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -5,11 +8,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, BookOpen, CheckCircle, XCircle, FileText } from 'lucide-react';
 
 interface UploadType {
     id: number;

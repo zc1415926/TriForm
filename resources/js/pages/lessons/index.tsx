@@ -1,13 +1,22 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, BookOpen, CheckCircle2, Copy, Download, Eye, FileUp, Filter, Pencil, Plus, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { LessonDetailDialog } from '@/components/lesson-detail-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardHeader,
 } from '@/components/ui/card';
-import { useState, useMemo } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -17,14 +26,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import {
     Table,
     TableBody,
     TableCell,
@@ -32,7 +33,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { LessonDetailDialog } from '@/components/lesson-detail-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { index, create, edit, destroy } from '@/routes/lessons';
 import type { BreadcrumbItem } from '@/types';

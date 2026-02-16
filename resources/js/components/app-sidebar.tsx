@@ -15,13 +15,11 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import AppLogo from './app-logo';
 import type { SharedData } from '@/types';
-
-interface PageProps extends SharedData {}
+import AppLogo from './app-logo';
 
 export function AppSidebar() {
-    const { auth } = usePage<PageProps>().props;
+    const { auth } = usePage<SharedData>().props;
     const user = auth.user;
     const student = auth.student;
 

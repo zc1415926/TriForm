@@ -1,4 +1,5 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import type { DBSchema, IDBPDatabase } from 'idb';
+import { openDB } from 'idb';
 
 // 登录记录数据结构
 export interface LoginRecord {

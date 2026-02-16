@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
 import {
     ArrowDown,
     ArrowUp,
@@ -23,6 +23,8 @@ import {
     Heart,
     Share2
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { StlModelViewer } from '@/components/stl-model-viewer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -41,8 +43,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { StlModelViewer } from '@/components/stl-model-viewer';
 import { VoxModelViewer } from '@/components/vox-model-viewer';
 import AppLayout from '@/layouts/app-layout';
 import { index as submissionsIndex } from '@/routes/submissions';

@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { useLoginMonitor } from '@/hooks/use-login-monitor';
 import { LoginHistoryModal } from './login-history-modal';
+import type { SharedData } from '@/types';
 
 /**
  * 登录监控包装组件
@@ -8,7 +9,7 @@ import { LoginHistoryModal } from './login-history-modal';
  */
 export function LoginMonitorWrapper() {
     const { isModalOpen, teacherName, closeModal } = useLoginMonitor();
-    const { auth } = usePage().props as { auth: { student?: { id: number } } };
+    const { auth } = usePage<SharedData>().props;
     const currentStudentId = auth.student?.id;
 
     return (
