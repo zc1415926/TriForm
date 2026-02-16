@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { useLoginMonitor } from '@/hooks/use-login-monitor';
-import { LoginHistoryModal } from './login-history-modal';
 import type { SharedData } from '@/types';
+import { LoginHistoryModal } from './login-history-modal';
 
 /**
  * 登录监控包装组件

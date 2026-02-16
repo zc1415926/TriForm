@@ -1,4 +1,4 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { GraduationCap, Lock, Mail, Sparkles, User, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import InputError from '@/components/input-error';
@@ -16,7 +16,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import axios from '@/lib/axios';
-import { addLoginRecord } from '@/lib/db';
 import { cn } from '@/lib/utils';
 import { store } from '@/routes/login';
 
@@ -40,8 +39,6 @@ export default function Login({ status }: Props) {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedStudentId, setSelectedStudentId] = useState('');
-    const [studentLoading, setStudentLoading] = useState(false);
-    const [studentError, setStudentError] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
 
     // 获取年份列表
@@ -86,51 +83,6 @@ export default function Login({ status }: Props) {
             })
             .catch(console.error);
     }, [selectedYear, selectedStudentId]);
-
-    // 学生登录
-    const handleStudentLogin = async () => {
-        if (!selectedStudentId) {
-            setStudentError('请选择你的姓名');
-            return;
-        }
-
-        setStudentLoading(true);
-        setStudentError('');
-
-        try {
-            const response = await axios.post('/api/student/login', {
-                student_id: selectedStudentId,
-            });
-
-            if (response.data.success) {
-                // 记住选择
-                if (rememberMe) {
-                    localStorage.setItem('student_last_year', selectedYear);
-                    localStorage.setItem('student_last_id', selectedStudentId);
-                }
-
-                // 记录到本地IndexedDB
-                const selectedStudent = students.find(s => s.id.toString() === selectedStudentId);
-                if (selectedStudent) {
-                    await addLoginRecord({
-                        studentId: selectedStudent.id,
-                        studentName: selectedStudent.name,
-                        loginTime: new Date().toISOString(),
-                        loginType: 'student',
-                    });
-                }
-
-                // 跳转到学生个人中心
-                router.visit('/student/dashboard');
-            } else {
-                setStudentError(response.data.message || '登录失败');
-            }
-        } catch (err: any) {
-            setStudentError(err.response?.data?.message || '登录失败，请重试');
-        } finally {
-            setStudentLoading(false);
-        }
-    };
 
     return (
         <AuthLayout
