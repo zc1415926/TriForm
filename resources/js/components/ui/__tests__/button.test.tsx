@@ -21,36 +21,36 @@ describe('Button', () => {
     render(<Button variant="destructive">Delete</Button>)
     
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('bg-destructive')
+    expect(button).toHaveClass('bg-red-500')
   })
 
   it('applies outline variant classes', () => {
     render(<Button variant="outline">Outline</Button>)
     
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('border')
-    expect(button).toHaveClass('border-input')
+    expect(button).toHaveClass('border-2')
+    expect(button).toHaveClass('border-blue-200')
   })
 
   it('applies ghost variant classes', () => {
     render(<Button variant="ghost">Ghost</Button>)
     
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('hover:bg-accent')
+    expect(button).toHaveClass('hover:bg-gray-100')
   })
 
   it('applies size classes', () => {
     render(<Button size="sm">Small</Button>)
     
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('h-8')
+    expect(button).toHaveClass('h-9')
   })
 
   it('applies icon size classes', () => {
     render(<Button size="icon">Icon</Button>)
     
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('size-9')
+    expect(button).toHaveClass('size-12')
   })
 
   it('can be disabled', () => {
