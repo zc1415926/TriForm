@@ -37,6 +37,20 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // 获取学生信息（支持两种登录方式）
+        $student = null;
+
+        // 方式1：通过 session（旧的学生登录方式）
+        $sessionStudentId = session('student_id');
+        if ($sessionStudentId) {
+            $student = \App\Models\Student::find($sessionStudentId);
+        }
+
+        // 方式2：通过 Fortify 登录的用户关联（新的学生登录方式）
+        if (! $student && $user && $user->isStudent()) {
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -47,6 +61,14 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => $user->isAdmin(),
                     'is_teacher' => $user->isTeacher(),
                     'is_student' => $user->isStudent(),
+                ] : null,
+                'student' => $student ? [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'grade' => $student->grade,
+                    'class' => $student->class,
+                    'year' => $student->year,
+                    'is_student_account' => true,
                 ] : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

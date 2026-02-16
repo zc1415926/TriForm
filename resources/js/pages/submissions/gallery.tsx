@@ -1,16 +1,16 @@
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { 
-    ArrowDown, 
-    ArrowUp, 
-    ArrowUpDown, 
-    FileText, 
-    Filter, 
-    Grid3X3, 
-    LayoutGrid, 
-    List, 
-    Search, 
+import {
+    ArrowDown,
+    ArrowUp,
+    ArrowUpDown,
+    FileText,
+    Filter,
+    Grid3X3,
+    LayoutGrid,
+    List,
+    Search,
     X,
     Sparkles,
     Image as ImageIcon,
@@ -21,8 +21,7 @@ import {
     Star,
     Calendar,
     Heart,
-    Share2,
-    Upload
+    Share2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -358,17 +357,6 @@ export default function SubmissionGallery() {
         }
     };
 
-    // 处理"我也做一个"
-    const handleCreateSimilar = (submission: Submission) => {
-        // 保存选择的课时和作业到 localStorage
-        if (submission.assignment) {
-            localStorage.setItem('preferredLessonId', submission.assignment.lesson_id?.toString() || '');
-            localStorage.setItem('preferredAssignmentId', submission.assignment_id.toString());
-        }
-        // 跳转到提交页面
-        window.location.href = '/submissions';
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="作品广场" />
@@ -558,7 +546,7 @@ export default function SubmissionGallery() {
                     </div>
                 ) : viewMode === 'grid' ? (
                     // 网格视图
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {submissions.map((submission, index) => {
                             const fileTypeInfo = getFileTypeInfo(submission.file_name);
                             const FileIcon = fileTypeInfo.icon;
@@ -612,19 +600,19 @@ export default function SubmissionGallery() {
                                         )}
                                     </div>
 
-                                    <CardHeader className="p-4 pb-2">
-                                        <div className="text-sm font-bold text-gray-800 truncate">
+                                    <CardHeader className="p-5 pb-3">
+                                        <div className="text-base font-bold text-gray-800 truncate">
                                             {submission.assignment.lesson?.name || '未知课时'}
                                         </div>
-                                        <div className="text-xs text-gray-500 truncate">
+                                        <div className="text-sm text-gray-500 truncate mt-1">
                                             {submission.assignment.name}
                                         </div>
                                     </CardHeader>
 
-                                    <CardContent className="p-4 pt-0">
+                                    <CardContent className="p-5 pt-0">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
                                                     {submission.student.name.charAt(0)}
                                                 </div>
                                                 <div className="min-w-0">
@@ -636,44 +624,32 @@ export default function SubmissionGallery() {
                                                 {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                                             </div>
                                         </div>
-                                        
+
                                         {/* 互动按钮 */}
-                                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="flex-1 h-8 text-gray-500 hover:text-pink-500 hover:bg-pink-50"
+                                                className="flex-1 h-9 text-gray-500 hover:text-pink-500 hover:bg-pink-50 rounded-lg"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleLike(submission.id);
                                                 }}
                                             >
-                                                <Heart className="w-4 h-4 mr-1" />
-                                                <span className="text-xs">{submission.likes_count || 0}</span>
+                                                <Heart className="w-4 h-4 mr-1.5" />
+                                                <span className="text-sm">{submission.likes_count || 0}</span>
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="flex-1 h-8 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50"
+                                                className="flex-1 h-9 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleShare(submission);
                                                 }}
                                             >
-                                                <Share2 className="w-4 h-4 mr-1" />
-                                                <span className="text-xs">分享</span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex-1 h-8 text-gray-500 hover:text-green-500 hover:bg-green-50"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleCreateSimilar(submission);
-                                                }}
-                                            >
-                                                <Upload className="w-4 h-4 mr-1" />
-                                                <span className="text-xs">我也做</span>
+                                                <Share2 className="w-4 h-4 mr-1.5" />
+                                                <span className="text-sm">分享</span>
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -753,7 +729,7 @@ export default function SubmissionGallery() {
                     </div>
                 ) : (
                     // 瀑布流视图
-                    <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
+                    <div className="columns-1 sm:columns-2 md:columns-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 space-y-8">
                         {submissions.map((submission) => {
                             const fileTypeInfo = getFileTypeInfo(submission.file_name);
                             const FileIcon = fileTypeInfo.icon;
@@ -803,19 +779,19 @@ export default function SubmissionGallery() {
                                         )}
                                     </div>
 
-                                    <CardHeader className="p-4 pb-2">
-                                        <div className="text-sm font-bold text-gray-800 truncate">
+                                    <CardHeader className="p-5 pb-3">
+                                        <div className="text-base font-bold text-gray-800 truncate">
                                             {submission.assignment.lesson?.name || '未知课时'}
                                         </div>
-                                        <div className="text-xs text-gray-500 truncate">
+                                        <div className="text-sm text-gray-500 truncate mt-1">
                                             {submission.assignment.name}
                                         </div>
                                     </CardHeader>
 
-                                    <CardContent className="p-4 pt-0">
+                                    <CardContent className="p-5 pt-0">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
                                                     {submission.student.name.charAt(0)}
                                                 </div>
                                                 <div className="min-w-0">

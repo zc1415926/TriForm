@@ -10,8 +10,18 @@ export type User = {
     [key: string]: unknown;
 };
 
+export type Student = {
+    id: number;
+    name: string;
+    grade: number;
+    class: number;
+    year: number;
+    is_student_account: boolean;
+};
+
 export type Auth = {
     user?: User;
+    student?: Student;
 };
 
 export type TwoFactorSetupData = {

@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import { initializeTheme } from './hooks/use-appearance';
+import { initEcho } from './echo';
 
 // Silently ignore Inertia prefetch aborted errors
 window.addEventListener('unhandledrejection', (event) => {
@@ -42,3 +43,6 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Initialize Laravel Echo for real-time broadcasting
+initEcho();

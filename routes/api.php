@@ -1,7 +1,9 @@
 <?php
 
+use App\Events\LoginHistoryRequested;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UploadController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,6 +32,7 @@ Route::middleware(['web'])->group(function () {
     // 学生相关 API
     Route::prefix('student')->name('api.student.')->group(function () {
         Route::post('/login', [SubmissionController::class, 'studentLogin'])->name('login');
+        Route::post('/logout', [SubmissionController::class, 'studentLogout'])->name('logout');
         Route::get('/dashboard', [SubmissionController::class, 'studentDashboard'])->name('dashboard');
     });
 
@@ -49,5 +52,34 @@ Route::middleware(['web'])->group(function () {
         Route::post('/ckeditor-image', [UploadController::class, 'ckeditorImage'])->name('api.upload.ckeditor-image');
         Route::post('/move-lesson-images', [UploadController::class, 'moveLessonImages'])->name('api.upload.move-lesson-images');
         Route::post('/attachment', [UploadController::class, 'attachment'])->name('api.upload.attachment');
+    });
+
+    // 教师监控 API（需要教师权限）- 只保留广播发送功能
+    Route::middleware(['auth'])->prefix('teacher')->group(function () {
+        // 发送广播请求（学生从本地显示登录记录）
+        Route::post('/broadcast-login-check', function (Request $request) {
+            $user = $request->user();
+
+            if (! $user->isAdmin() && ! $user->isTeacher()) {
+                return response()->json(['error' => '无权访问'], 403);
+            }
+
+            $targetStudentId = $request->input('target_student_id');
+
+            try {
+                // 广播事件
+                event(new LoginHistoryRequested($user, $targetStudentId));
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $targetStudentId ? '已向指定学生发送请求' : '已向所有在线学生发送请求',
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '广播发送失败: '.$e->getMessage(),
+                ], 500);
+            }
+        })->name('api.teacher.broadcast-login-check');
     });
 });

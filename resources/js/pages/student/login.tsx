@@ -11,7 +11,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/selector';
+} from '@/components/ui/select';
 import { GraduationCap, User, Lock, Sparkles } from 'lucide-react';
 
 interface Student {

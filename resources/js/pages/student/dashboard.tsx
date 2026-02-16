@@ -1,11 +1,13 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from '@/lib/axios';
+import { addLoginRecord } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { LoginMonitorWrapper } from '@/components/login-monitor-wrapper';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import {
@@ -71,6 +73,7 @@ export default function StudentDashboard() {
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const hasRecordedLogin = useRef(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -80,6 +83,19 @@ export default function StudentDashboard() {
         try {
             const response = await axios.get('/api/student/dashboard');
             setDashboardData(response.data);
+
+            // 记录登录到本地 IndexedDB（只记录一次）
+            if (response.data?.student && !hasRecordedLogin.current) {
+                hasRecordedLogin.current = true;
+                const student = response.data.student;
+                await addLoginRecord({
+                    studentId: student.id,
+                    studentName: student.name,
+                    loginTime: new Date().toISOString(),
+                    loginType: 'student',
+                });
+                console.log('[登录] 已记录到本地:', student.name);
+            }
         } catch (err) {
             setError('加载数据失败，请稍后重试');
             console.error(err);
@@ -379,6 +395,9 @@ export default function StudentDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* 登录监控弹窗 */}
+            <LoginMonitorWrapper />
         </AppLayout>
     );
 }

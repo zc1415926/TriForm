@@ -715,22 +715,58 @@ class SubmissionController extends Controller
      */
     public function studentLogin(Request $request): \Illuminate\Http\JsonResponse
     {
-        $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'password' => 'nullable|string',
-        ]);
+        // 如果用户已通过 Fortify 登录且是学生
+        $user = auth()->user();
+        if ($user && $user->isStudent()) {
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+            if ($student) {
+                return response()->json([
+                    'success' => true,
+                    'student' => [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                    ],
+                ]);
+            }
+        }
 
-        $student = \App\Models\Student::findOrFail($validated['student_id']);
+        // 旧方式：从 session 获取
+        $studentId = session('student_id');
+        if ($studentId) {
+            $student = \App\Models\Student::find($studentId);
+            if ($student) {
+                return response()->json([
+                    'success' => true,
+                    'student' => [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                    ],
+                ]);
+            }
+        }
 
-        // 将学生信息存入 session
-        session(['student_id' => $student->id]);
+        return response()->json([
+            'success' => false,
+            'message' => '未登录',
+        ], 401);
+    }
+
+    /**
+     * 学生登出
+     */
+    public function studentLogout(Request $request): \Illuminate\Http\JsonResponse
+    {
+        // 清除 session 中的学生信息（向后兼容）
+        session()->forget('student_id');
+
+        // 调用 Laravel 的退出登录（Fortify）
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'success' => true,
-            'student' => [
-                'id' => $student->id,
-                'name' => $student->name,
-            ],
+            'message' => '已成功退出登录',
         ]);
     }
 
@@ -739,21 +775,36 @@ class SubmissionController extends Controller
      */
     public function studentDashboard(Request $request): \Illuminate\Http\JsonResponse
     {
-        $studentId = session('student_id');
+        $student = null;
 
-        if (! $studentId) {
+        // 方式1：通过 Fortify 登录的用户关联
+        $user = auth()->user();
+        if ($user && $user->isStudent()) {
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+        }
+
+        // 方式2：通过 session（向后兼容）
+        if (! $student) {
+            $studentId = session('student_id');
+            if ($studentId) {
+                $student = \App\Models\Student::find($studentId);
+            }
+        }
+
+        if (! $student) {
             return response()->json([
                 'success' => false,
                 'message' => '请先登录',
             ], 401);
         }
 
+        // 重新加载学生数据，包含关联关系
         $student = \App\Models\Student::with([
             'submissions' => function ($query): void {
                 $query->with(['assignment:id,name,lesson_id', 'assignment.lesson:id,name'])
                     ->orderBy('created_at', 'desc');
             },
-        ])->findOrFail($studentId);
+        ])->findOrFail($student->id);
 
         $submissions = $student->submissions;
         $totalSubmissions = $submissions->count();
