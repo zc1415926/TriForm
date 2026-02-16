@@ -1,9 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { Sparkles, BookOpen, Users, Trophy, Star, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { dashboard, login, register } from '@/routes';
 import type { SharedData } from '@/types';
-import { Sparkles, BookOpen, Users, Trophy, Star, Rocket } from 'lucide-react';
 
 export default function Welcome({
     canRegister = true,

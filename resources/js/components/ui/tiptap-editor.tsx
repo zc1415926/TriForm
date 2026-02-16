@@ -2,9 +2,9 @@ import Image from '@tiptap/extension-image';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Image as ImageIcon, Undo, Redo, Paperclip, FileText, Code2, Wand2, AlertCircle } from 'lucide-react';
+import { useRef, useState, useCallback } from 'react';
 import { Button } from './button';
 import { Textarea } from './textarea';
-import { useRef, useState, useCallback } from 'react';
 
 interface RichTextEditorProps {
     content: string;

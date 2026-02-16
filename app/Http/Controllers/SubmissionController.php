@@ -709,4 +709,200 @@ class SubmissionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * 学生登录
+     */
+    public function studentLogin(Request $request): \Illuminate\Http\JsonResponse
+    {
+        // 如果用户已通过 Fortify 登录且是学生
+        $user = auth()->user();
+        if ($user && $user->isStudent()) {
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+            if ($student) {
+                return response()->json([
+                    'success' => true,
+                    'student' => [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                    ],
+                ]);
+            }
+        }
+
+        // 旧方式：从 session 获取
+        $studentId = session('student_id');
+        if ($studentId) {
+            $student = \App\Models\Student::find($studentId);
+            if ($student) {
+                return response()->json([
+                    'success' => true,
+                    'student' => [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                    ],
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => '未登录',
+        ], 401);
+    }
+
+    /**
+     * 学生登出
+     */
+    public function studentLogout(Request $request): \Illuminate\Http\JsonResponse
+    {
+        // 清除 session 中的学生信息（向后兼容）
+        session()->forget('student_id');
+
+        // 调用 Laravel 的退出登录（Fortify）
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'success' => true,
+            'message' => '已成功退出登录',
+        ]);
+    }
+
+    /**
+     * 学生仪表板数据
+     */
+    public function studentDashboard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $student = null;
+
+        // 方式1：通过 Fortify 登录的用户关联
+        $user = auth()->user();
+        if ($user && $user->isStudent()) {
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+        }
+
+        // 方式2：通过 session（向后兼容）
+        if (! $student) {
+            $studentId = session('student_id');
+            if ($studentId) {
+                $student = \App\Models\Student::find($studentId);
+            }
+        }
+
+        if (! $student) {
+            return response()->json([
+                'success' => false,
+                'message' => '请先登录',
+            ], 401);
+        }
+
+        // 重新加载学生数据，包含关联关系
+        $student = \App\Models\Student::with([
+            'submissions' => function ($query): void {
+                $query->with(['assignment:id,name,lesson_id', 'assignment.lesson:id,name'])
+                    ->orderBy('created_at', 'desc');
+            },
+        ])->findOrFail($student->id);
+
+        $submissions = $student->submissions;
+        $totalSubmissions = $submissions->count();
+        $scoredSubmissions = $submissions->whereNotNull('score');
+        $totalScore = $scoredSubmissions->sum('score');
+        $scoredCount = $scoredSubmissions->count();
+        $avgScore = $scoredCount > 0 ? round($totalScore / $scoredCount, 2) : 0;
+
+        // 计算完成率
+        $totalAssignments = \App\Models\Assignment::whereHas('lesson', function ($q) use ($student): void {
+            $q->where('year', $student->year);
+        })->count();
+        $completionRate = $totalAssignments > 0
+            ? round(($totalSubmissions / $totalAssignments) * 100, 1)
+            : 0;
+
+        // 计算待提交作业数
+        $pendingAssignments = $totalAssignments - $totalSubmissions;
+
+        // 成就系统
+        $achievements = [
+            [
+                'id' => 'first_submission',
+                'name' => '初次尝试',
+                'description' => '提交第一个作品',
+                'icon' => '🌟',
+                'unlocked_at' => $totalSubmissions >= 1 ? now()->toISOString() : null,
+            ],
+            [
+                'id' => 'five_submissions',
+                'name' => '创作达人',
+                'description' => '提交5个作品',
+                'icon' => '🎨',
+                'unlocked_at' => $totalSubmissions >= 5 ? now()->toISOString() : null,
+            ],
+            [
+                'id' => 'perfect_score',
+                'name' => '完美作品',
+                'description' => '获得G等级评价',
+                'icon' => '👑',
+                'unlocked_at' => $scoredSubmissions->where('score', 12)->count() > 0 ? now()->toISOString() : null,
+            ],
+            [
+                'id' => 'all_completed',
+                'name' => '全勤奖',
+                'description' => '完成所有作业',
+                'icon' => '🏆',
+                'unlocked_at' => $completionRate >= 100 ? now()->toISOString() : null,
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'class' => $student->class,
+                'year' => $student->year,
+                'avatar' => $student->avatar,
+            ],
+            'statistics' => [
+                'total_submissions' => $totalSubmissions,
+                'scored_submissions' => $scoredCount,
+                'total_score' => $totalScore,
+                'average_score' => $avgScore,
+                'completion_rate' => $completionRate,
+            ],
+            'submissions' => $submissions->map(function ($submission): array {
+                return [
+                    'id' => $submission->id,
+                    'assignment_name' => $submission->assignment?->name ?? '未知作业',
+                    'lesson_name' => $submission->assignment?->lesson?->name ?? '未知课时',
+                    'file_name' => $submission->file_name,
+                    'score' => $submission->score,
+                    'created_at' => $submission->created_at->format('Y-m-d'),
+                    'preview_image_path' => $submission->preview_image_path,
+                ];
+            }),
+            'pending_assignments' => max(0, $pendingAssignments),
+            'achievements' => $achievements,
+        ]);
+    }
+
+    /**
+     * 点赞作品
+     */
+    public function likeSubmission(string $id): \Illuminate\Http\JsonResponse
+    {
+        $submission = Submission::findOrFail($id);
+
+        // 这里可以添加点赞记录逻辑（如果需要记录谁点赞了）
+        // 暂时只增加点赞数
+        $submission->increment('likes_count');
+
+        return response()->json([
+            'success' => true,
+            'likes_count' => $submission->likes_count,
+        ]);
+    }
 }

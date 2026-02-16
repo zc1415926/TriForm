@@ -1,11 +1,14 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { BookOpen, Folder, GraduationCap, LayoutGrid, LogOut, Menu, Search } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -31,7 +34,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem, SharedData } from '@/types';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
@@ -215,7 +218,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 ))}
                             </div>
                         </div>
-                        {auth.user && (
+                        {(auth.user || auth.student) && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -224,17 +227,61 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     >
                                         <Avatar className="size-8 overflow-hidden rounded-full">
                                             <AvatarImage
-                                                src={auth.user.avatar}
-                                                alt={auth.user.name}
+                                                src={auth.user?.avatar}
+                                                alt={auth.user?.name || auth.student?.name}
                                             />
                                             <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                                {getInitials(auth.user.name)}
+                                                {getInitials(auth.user?.name || auth.student?.name || '')}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56" align="end">
-                                    <UserMenuContent user={auth.user} />
+                                    {auth.user ? (
+                                        <UserMenuContent user={auth.user} />
+                                    ) : auth.student ? (
+                                        <>
+                                            <DropdownMenuLabel className="p-0 font-normal">
+                                                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                                    <Avatar className="size-8 overflow-hidden rounded-full">
+                                                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+                                                            {getInitials(auth.student.name)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                                        <span className="truncate font-semibold">{auth.student.name}</span>
+                                                        <span className="truncate text-xs text-muted-foreground">
+                                                            {auth.student.grade}年级{auth.student.class}班
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem asChild>
+                                                    <Link
+                                                        className="block w-full cursor-pointer rounded-lg hover:bg-purple-50"
+                                                        href="/student/dashboard"
+                                                        prefetch
+                                                    >
+                                                        <GraduationCap className="mr-2 h-4 w-4 text-purple-500" />
+                                                        <span className="font-medium">我的空间</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem asChild>
+                                                <Link
+                                                    className="block w-full cursor-pointer rounded-lg hover:bg-red-50 text-red-600"
+                                                    href={logout()}
+                                                    as="button"
+                                                >
+                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    <span className="font-medium">退出登录</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        </>
+                                    ) : null}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}

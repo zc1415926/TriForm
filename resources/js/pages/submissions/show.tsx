@@ -1,8 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { Eye, Calendar, BookOpen, FileText, Trash2, Download, Sparkles, Award } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import axios from '@/lib/axios';
 import { StlModelViewer } from '@/components/stl-model-viewer';
-import { VoxModelViewer, type VoxModelViewerRef } from '@/components/vox-model-viewer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,10 +33,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { VoxModelViewer, type VoxModelViewerRef } from '@/components/vox-model-viewer';
 import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
 import { index as submissionsIndex } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
-import { Eye, Calendar, BookOpen, FileText, Trash2, Download, Sparkles, Award } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

@@ -17,6 +17,14 @@ Route::get('submissions/gallery', [SubmissionController::class, 'gallery'])->nam
 Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
 Route::post('submissions', [SubmissionController::class, 'store'])->name('submissions.store');
 
+// 学生登录页面 - 公开访问（用于直接访问学生登录界面）
+Route::inertia('student/login', 'student/login')->name('student.login');
+
+// 学生个人中心 - 需要认证
+Route::middleware(['auth'])->group(function () {
+    Route::inertia('student/dashboard', 'student/dashboard')->name('student.dashboard');
+});
+
 // 需要认证的路由
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -41,6 +49,11 @@ Route::middleware(['auth'])->group(function () {
 
     // 查看作品 - 需要登录
     Route::get('submissions/show', [SubmissionController::class, 'show'])->name('submissions.show');
+
+    // 教师登录监控页面（仅管理员和教师）
+    Route::middleware(['role:admin,teacher'])->group(function () {
+        Route::inertia('teacher/login-monitor', 'teacher/login-monitor')->name('teacher.login-monitor');
+    });
 });
 
 require __DIR__.'/settings.php';

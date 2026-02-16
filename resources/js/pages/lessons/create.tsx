@@ -1,8 +1,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { LessonForm } from '@/components/lesson-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

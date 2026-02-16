@@ -1,5 +1,21 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
 import axios from 'axios';
+import { 
+    Upload, 
+    Calendar, 
+    User, 
+    BookOpen, 
+    FileText, 
+    CheckCircle2, 
+    AlertCircle,
+    Sparkles,
+    Award,
+    Clock,
+    FileUp,
+    Image as ImageIcon,
+    Box,
+    Layers
+} from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
     StlPreviewGenerator 
@@ -35,22 +51,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { store } from '@/routes/submissions';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Upload, 
-    Calendar, 
-    User, 
-    BookOpen, 
-    FileText, 
-    CheckCircle2, 
-    AlertCircle,
-    Sparkles,
-    Award,
-    Clock,
-    FileUp,
-    Image as ImageIcon,
-    Box,
-    Layers
-} from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -147,6 +147,66 @@ export default function SubmissionIndex() {
         student_id: '',
         assignments: [] as { assignment_id: string; file: File | null; preview_image?: File }[],
     });
+
+    // 记住学生选择 - 从 localStorage 恢复
+    useEffect(() => {
+        const savedStudentId = localStorage.getItem('preferredStudentId');
+        const savedYear = localStorage.getItem('preferredYear');
+        
+        if (savedYear && years.includes(savedYear)) {
+            handleYearChange(savedYear).then(() => {
+                if (savedStudentId) {
+                    setData('student_id', savedStudentId);
+                    handleStudentChange(savedStudentId);
+                }
+            });
+        }
+    }, []);
+
+    // 记住学生选择 - 保存到 localStorage
+    useEffect(() => {
+        if (data.student_id) {
+            localStorage.setItem('preferredStudentId', data.student_id);
+        }
+    }, [data.student_id]);
+
+    // 记住年份选择
+    const handleYearChangeWithSave = async (year: string) => {
+        localStorage.setItem('preferredYear', year);
+        await handleYearChange(year);
+    };
+
+    // 处理学生选择
+    const handleStudentChange = async (studentId: string) => {
+        setData('student_id', studentId);
+        // 可以在这里添加获取该学生未完成作业的逻辑
+    };
+
+    // 拖拽上传状态
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+    // 处理拖拽进入
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        setDragOverIndex(index);
+    };
+
+    // 处理拖拽离开
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setDragOverIndex(null);
+    };
+
+    // 处理文件拖放
+    const handleDrop = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        setDragOverIndex(null);
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileChange(index, files[0]);
+        }
+    };
 
     // 下拉数据
     const [students, setStudents] = useState<Student[]>([]);
@@ -435,7 +495,7 @@ export default function SubmissionIndex() {
                             {/* 年份选择 */}
                             <div className="space-y-2">
                                 <Label htmlFor="year" className="text-gray-700 font-medium">选择年份</Label>
-                                <Select onValueChange={handleYearChange} disabled={loading}>
+                                <Select onValueChange={handleYearChangeWithSave} disabled={loading}>
                                     <SelectTrigger className="rounded-lg h-11 border-gray-200">
                                         <SelectValue placeholder="请选择年份" />
                                     </SelectTrigger>
@@ -477,27 +537,58 @@ export default function SubmissionIndex() {
                                 )}
                             </div>
 
-                            {/* 课时选择 */}
-                            <div className="space-y-2">
-                                <Label htmlFor="lesson" className="text-gray-700 font-medium">选择课时</Label>
+                            {/* 课时选择 - 卡片式展示 */}
+                            <div className="space-y-3">
+                                <Label className="text-gray-700 font-medium flex items-center gap-2">
+                                    <BookOpen className="w-4 h-4 text-indigo-500" />
+                                    选择课时
+                                </Label>
                                 {loading && lessons.length === 0 ? (
                                     <div className="flex items-center gap-2 text-gray-400 py-3">
                                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                         加载中...
                                     </div>
+                                ) : lessons.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {lessons.map((lesson) => (
+                                            <div
+                                                key={lesson.id}
+                                                onClick={() => handleLessonChange(lesson.id.toString())}
+                                                className={`cursor-pointer rounded-xl p-4 border-2 transition-all hover:scale-[1.02] ${
+                                                    selectedLesson?.id === lesson.id
+                                                        ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                                                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                                        selectedLesson?.id === lesson.id
+                                                            ? 'bg-indigo-500 text-white'
+                                                            : 'bg-indigo-100 text-indigo-600'
+                                                    }`}>
+                                                        <BookOpen className="w-6 h-6" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-semibold text-gray-900 truncate">{lesson.name}</h3>
+                                                        <p className="text-sm text-gray-500 mt-1">
+                                                            {lesson.assignments?.length || 0} 个作业
+                                                        </p>
+                                                        {selectedLesson?.id === lesson.id && (
+                                                            <div className="flex items-center gap-1 text-indigo-600 text-xs mt-2">
+                                                                <CheckCircle2 className="w-3 h-3" />
+                                                                已选择
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <Select onValueChange={handleLessonChange} disabled={loading || lessons.length === 0}>
-                                        <SelectTrigger className="rounded-lg h-11 border-gray-200">
-                                            <SelectValue placeholder={lessons.length === 0 ? "请先选择年份" : "请选择课时"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {lessons.map((lesson) => (
-                                                <SelectItem key={lesson.id} value={lesson.id.toString()}>
-                                                    {lesson.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                        <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-gray-500">请先选择年份</p>
+                                    </div>
                                 )}
                             </div>
 
@@ -573,26 +664,43 @@ export default function SubmissionIndex() {
                                                         </div>
 
                                                         <div className="space-y-3">
-                                                            <div className="relative">
-                                                                <label className="flex items-center gap-3 cursor-pointer group">
-                                                                    <input
-                                                                        type="file"
-                                                                        accept={assignment.upload_type.extensions.map(ext => `.${ext}`).join(',')}
-                                                                        onChange={(e) =>
-                                                                            handleFileChange(
-                                                                                index,
-                                                                                e.target.files?.[0] || null
-                                                                            )
-                                                                        }
-                                                                        className="sr-only"
-                                                                    />
-                                                                    <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium group-hover:bg-blue-100 transition-colors border border-blue-200">
-                                                                        选择文件
+                                                            {/* 拖拽上传区域 */}
+                                                            <div
+                                                                onDragOver={(e) => handleDragOver(e, index)}
+                                                                onDragLeave={handleDragLeave}
+                                                                onDrop={(e) => handleDrop(e, index)}
+                                                                className={`relative border-2 border-dashed rounded-xl p-6 transition-all ${
+                                                                    dragOverIndex === index
+                                                                        ? 'border-indigo-500 bg-indigo-50'
+                                                                        : 'border-gray-300 bg-gray-50 hover:border-indigo-300'
+                                                                }`}
+                                                            >
+                                                                <input
+                                                                    type="file"
+                                                                    accept={assignment.upload_type.extensions.map(ext => `.${ext}`).join(',')}
+                                                                    onChange={(e) =>
+                                                                        handleFileChange(
+                                                                            index,
+                                                                            e.target.files?.[0] || null
+                                                                        )
+                                                                    }
+                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                                />
+                                                                <div className="text-center">
+                                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
+                                                                        dragOverIndex === index ? 'bg-indigo-100' : 'bg-gray-100'
+                                                                    }`}>
+                                                                        <FileUp className={`w-6 h-6 ${
+                                                                            dragOverIndex === index ? 'text-indigo-600' : 'text-gray-400'
+                                                                        }`} />
                                                                     </div>
-                                                                    <span className="text-sm text-gray-500">
-                                                                        {data.assignments[index]?.file ? data.assignments[index].file.name : '未选择文件'}
-                                                                    </span>
-                                                                </label>
+                                                                    <p className="text-sm text-gray-600 font-medium">
+                                                                        {dragOverIndex === index ? '松开以上传文件' : '点击或拖拽文件到此处'}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-400 mt-1">
+                                                                        支持 {assignment.upload_type.extensions.join(', ')} 格式
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                             {data.assignments[index]?.file && (
                                                                 <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-lg p-3">

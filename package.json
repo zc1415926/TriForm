@@ -37,6 +37,7 @@
     "jsdom": "^28.0.0",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "puppeteer": "^24.37.3",
     "typescript-eslint": "^8.23.0",
     "vitest": "^4.0.18"
   },
@@ -73,7 +74,9 @@
     "clsx": "^2.1.1",
     "concurrently": "^9.0.1",
     "globals": "^15.14.0",
+    "idb": "^8.0.3",
     "input-otp": "^1.4.2",
+    "laravel-echo": "^2.3.0",
     "laravel-vite-plugin": "^2.0",
     "lucide-react": "^0.475.0",
     "react": "^19.2.0",

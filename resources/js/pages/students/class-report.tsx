@@ -1,15 +1,15 @@
 import { Head, router } from '@inertiajs/react';
+import { TrendingUp, Users, Award, ArrowLeft, Download, BarChart3, Trophy } from 'lucide-react';
 import React, { useState } from 'react';
-import axios from '@/lib/axios';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
 import { index as studentsIndex } from '@/routes/students';
 import type { BreadcrumbItem } from '@/types';
-import { TrendingUp, Users, Award, ArrowLeft, Download, BarChart3, Trophy } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

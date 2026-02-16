@@ -2,7 +2,8 @@
  * 页面操作辅助函数
  */
 
-import { Page, expect } from '@playwright/test';
+import type { Page} from '@playwright/test';
+import { expect } from '@playwright/test';
 
 /**
  * 等待页面加载完成

@@ -9,10 +9,13 @@ const axiosInstance = axios.create({
     },
 });
 
-// 从 meta 标签获取 CSRF Token
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-if (csrfToken) {
-    axiosInstance.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-}
+// 使用请求拦截器动态获取 CSRF Token
+axiosInstance.interceptors.request.use((config) => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+        config.headers['X-CSRF-TOKEN'] = csrfToken;
+    }
+    return config;
+});
 
 export default axiosInstance;
