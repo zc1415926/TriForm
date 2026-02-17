@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Submission;
 use App\Models\UploadType;
 use App\Models\User;
+use App\Services\ImageGenerator;
 use App\Services\PreviewGenerator;
 use App\Services\StlGenerator;
 use Illuminate\Database\Seeder;
@@ -198,11 +199,21 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 学生: '.Student::count().' 人');
         $this->command->info('- 课程: '.Lesson::count().' 门');
         $this->command->info('- 作业: '.Assignment::count().' 个');
+
+        // 统计提交类型
+        $submissions = Submission::with('assignment.uploadType')->get();
+        $stlCount = $submissions->filter(fn ($s) => str_contains($s->file_name, '.stl'))->count();
+        $pngCount = $submissions->filter(fn ($s) => str_contains($s->file_name, '.png'))->count();
+        $otherCount = $submissions->count() - $stlCount - $pngCount;
+
         $this->command->info('- 提交: '.Submission::count().' 份');
+        $this->command->info('  ├─ STL 3D模型: '.$stlCount.' 份');
+        $this->command->info('  ├─ PNG 图片: '.$pngCount.' 份');
+        $this->command->info('  └─ 其他: '.$otherCount.' 份');
     }
 
     /**
-     * 创建提交记录（包含真实的 STL 文件和预览图）
+     * 创建提交记录（包含真实的 STL 文件、PNG 图片和预览图）
      */
     private function createSubmissions($students, $assignments): void
     {
@@ -230,21 +241,57 @@ class DatabaseSeeder extends Seeder
                     // 确保目录存在
                     Storage::disk('public')->makeDirectory($storagePath);
 
-                    // 1. 生成 STL 文件
-                    $shapeType = $shapeTypes[array_rand($shapeTypes)];
-                    $stlContent = match ($shapeType) {
-                        'cube' => StlGenerator::cube(rand(8, 15), rand(8, 15), rand(8, 15)),
-                        'cylinder' => StlGenerator::cylinder(rand(3, 6), rand(8, 15), 32),
-                        'sphere' => StlGenerator::sphere(rand(4, 7), 16),
-                    };
+                    // 根据作业类型决定提交内容
+                    $uploadType = $assignment->uploadType;
+                    $is3DModel = in_array('stl', $uploadType->extensions ?? []);
+                    $isImage = in_array('png', $uploadType->extensions ?? []);
 
-                    $stlFileName = Str::random(40).'.stl';
-                    $stlPath = $storagePath.'/'.$stlFileName;
-                    Storage::disk('public')->put($stlPath, $stlContent);
+                    if ($is3DModel) {
+                        // 1. 生成 STL 文件
+                        $shapeType = $shapeTypes[array_rand($shapeTypes)];
+                        $stlContent = match ($shapeType) {
+                            'cube' => StlGenerator::cube(rand(8, 15), rand(8, 15), rand(8, 15)),
+                            'cylinder' => StlGenerator::cylinder(rand(3, 6), rand(8, 15), 32),
+                            'sphere' => StlGenerator::sphere(rand(4, 7), 16),
+                        };
 
-                    // 2. 生成预览图
-                    $shapeName = strtoupper($shapeType);
-                    $previewPath = PreviewGenerator::forSTL($shapeName, $storagePath);
+                        $stlFileName = Str::random(40).'.stl';
+                        $filePath = $storagePath.'/'.$stlFileName;
+                        Storage::disk('public')->put($filePath, $stlContent);
+
+                        // 2. 生成预览图
+                        $shapeName = strtoupper($shapeType);
+                        $previewPath = PreviewGenerator::forSTL($shapeName, $storagePath);
+
+                        $fileName = $student->name.'_'.$shapeType.'.stl';
+                        $fileSize = Storage::disk('public')->size($filePath);
+                    } elseif ($isImage) {
+                        // 1. 生成 PNG 图片（大图 + 缩略图）
+                        $imageData = ImageGenerator::random();
+
+                        // 保存大图
+                        $filePath = $storagePath.'/'.$imageData['file_name'];
+                        Storage::disk('public')->put($filePath, $imageData['full']);
+
+                        // 保存缩略图
+                        $thumbFileName = Str::random(40).'_thumb.png';
+                        $previewPath = $storagePath.'/'.$thumbFileName;
+                        Storage::disk('public')->put($previewPath, $imageData['thumbnail']);
+
+                        $fileName = $student->name.'_'.$imageData['type'].'.png';
+                        $fileSize = strlen($imageData['full']);
+                    } else {
+                        // 其他类型（文档等），使用占位符
+                        $fileName = Str::random(40).'.txt';
+                        $filePath = $storagePath.'/'.$fileName;
+                        $content = "这是 {$student->name} 的作业提交文件。\n作业: {$assignment->name}\n提交时间: ".now()->format('Y-m-d H:i:s');
+                        Storage::disk('public')->put($filePath, $content);
+
+                        // 生成占位预览图
+                        $previewPath = PreviewGenerator::forSTL('DEFAULT', $storagePath);
+
+                        $fileSize = strlen($content);
+                    }
 
                     // 3. 创建提交记录
                     Submission::firstOrCreate(
@@ -253,9 +300,9 @@ class DatabaseSeeder extends Seeder
                             'assignment_id' => $assignment->id,
                         ],
                         [
-                            'file_path' => $stlPath,
-                            'file_name' => $student->name.'_'.$shapeType.'.stl',
-                            'file_size' => Storage::disk('public')->size($stlPath),
+                            'file_path' => $filePath,
+                            'file_name' => $fileName,
+                            'file_size' => $fileSize,
                             'preview_image_path' => $previewPath,
                             'status' => 'pending',
                             'score' => $hasScore ? $gradeScores[$grades[array_rand($grades)]] : null,

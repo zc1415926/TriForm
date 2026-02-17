@@ -315,7 +315,7 @@ export const VoxModelViewer = forwardRef<VoxModelViewerRef, VoxModelViewerProps>
 
         // 创建坐标轴
         const axesViewer = new AxesViewer(scene, 3);
-        axesViewer.enabled = showAxes;
+        (axesViewer as unknown as { enabled: boolean }).enabled = showAxes;
         axesViewerRef.current = axesViewer;
 
         // 渲染循环
@@ -446,7 +446,7 @@ export const VoxModelViewer = forwardRef<VoxModelViewerRef, VoxModelViewerProps>
     // 更新坐标轴显示
     useEffect(() => {
         if (axesViewerRef.current) {
-            axesViewerRef.current.enabled = showAxes;
+            (axesViewerRef.current as unknown as { enabled: boolean }).enabled = showAxes;
         }
     }, [showAxes]);
 

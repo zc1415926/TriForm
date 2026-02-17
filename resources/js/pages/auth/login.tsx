@@ -45,7 +45,7 @@ export default function Login({ status }: Props) {
     useEffect(() => {
         axios.get('/api/submissions/students-by-year')
             .then(response => {
-                const yearList = response.data.years || [];
+                const yearList = response.data as string[];
                 setYears(yearList);
                 // 尝试从 localStorage 恢复选择
                 const savedYear = localStorage.getItem('student_last_year');

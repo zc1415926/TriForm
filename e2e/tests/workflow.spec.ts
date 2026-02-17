@@ -4,7 +4,7 @@
 
 import { test, expect } from '@playwright/test';
 import { login } from '../helpers/auth-helper';
-import { waitForPageLoad, confirmDialog } from '../helpers/page-helper';
+import { waitForPageLoad } from '../helpers/page-helper';
 
 test.describe('完整工作流程', () => {
     test('创建课程 -> 创建作业 -> 查看提交流程', async ({ page }) => {

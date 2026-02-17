@@ -21,7 +21,10 @@ import {
     Star,
     Calendar,
     Heart,
-    Share2
+    Share2,
+    Download,
+    Copy,
+    FileType,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { StlModelViewer } from '@/components/stl-model-viewer';
@@ -160,6 +163,18 @@ export default function SubmissionGallery() {
         fileName: string;
     } | null>(null);
 
+    // 图片预览尺寸状态
+    const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+    const [imageFileName, setImageFileName] = useState('');
+
+    // TXT文本预览模态框状态
+    const [txtPreviewOpen, setTxtPreviewOpen] = useState(false);
+    const [txtPreviewData, setTxtPreviewData] = useState<{
+        content: string;
+        fileName: string;
+        fileSize: number;
+    } | null>(null);
+
     // 加载年份列表
     useEffect(() => {
         loadYears();
@@ -191,8 +206,9 @@ export default function SubmissionGallery() {
     const loadYears = async () => {
         try {
             const response = await axios.get('/api/submissions/students-by-year');
-            const uniqueYears = [...new Set(response.data.map((s: { year: string }) => s.year))].sort().reverse() as string[];
-            setYears(uniqueYears);
+            // 后端直接返回年份字符串数组
+            const years = (response.data as string[]).sort().reverse();
+            setYears(years);
         } catch (error) {
             console.error('加载年份失败:', error);
         }
@@ -290,6 +306,8 @@ export default function SubmissionGallery() {
 
         if (fileTypeInfo.type === 'image') {
             setImagePreviewUrl(`/storage/${submission.file_path}`);
+            setImageFileName(submission.file_name);
+            setImageDimensions(null); // 重置尺寸
             setImagePreviewOpen(true);
         } else if (fileTypeInfo.type === 'model') {
             setModelPreviewData({
@@ -303,6 +321,21 @@ export default function SubmissionGallery() {
                 fileName: submission.file_name,
             });
             setVoxPreviewOpen(true);
+        } else if (submission.file_name.endsWith('.txt')) {
+            // 加载并显示TXT文件
+            fetch(`/storage/${submission.file_path}`)
+                .then(res => res.text())
+                .then(content => {
+                    setTxtPreviewData({
+                        content,
+                        fileName: submission.file_name,
+                        fileSize: submission.file_size,
+                    });
+                    setTxtPreviewOpen(true);
+                })
+                .catch(() => {
+                    window.open(`/storage/${submission.file_path}`, '_blank');
+                });
         } else {
             window.open(`/storage/${submission.file_path}`, '_blank');
         }
@@ -828,18 +861,75 @@ export default function SubmissionGallery() {
 
             {/* 图片预览模态框 */}
             <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
-                <DialogContent className="!max-w-[98vw] !max-h-[95vh] overflow-hidden p-0 rounded-none border-0 bg-black">
+                <DialogContent
+                    className="overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white [&>button]:hidden"
+                    style={{
+                        maxWidth: imageDimensions
+                            ? `${Math.min(imageDimensions.width, window.innerWidth * 0.9)}px`
+                            : '90vw',
+                        width: 'auto',
+                    }}
+                >
                     <VisuallyHidden>
-                        <DialogHeader>
-                            <DialogTitle>图片预览</DialogTitle>
-                            <DialogDescription>点击图片查看大图</DialogDescription>
-                        </DialogHeader>
+                        <DialogTitle>图片预览 - {imageFileName}</DialogTitle>
                     </VisuallyHidden>
-                    <div className="flex items-center justify-center w-full h-full bg-black">
+                    {/* 标题栏 - 渐变色背景 */}
+                    <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <ImageIcon className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold text-sm truncate max-w-[300px]">
+                                    {imageFileName}
+                                </h3>
+                                {imageDimensions && (
+                                    <p className="text-blue-100 text-xs">
+                                        {imageDimensions.width} × {imageDimensions.height} 像素
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white/90 hover:text-white hover:bg-white/20 rounded-lg"
+                                onClick={() => setImagePreviewOpen(false)}
+                            >
+                                <X className="w-5 h-5" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* 图片显示区域 - 浅色背景 */}
+                    <div className="flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
                         <img
                             src={imagePreviewUrl}
-                            alt="预览图"
-                            className="w-full h-full max-h-[95vh] object-contain"
+                            alt={imageFileName}
+                            className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-lg border border-gray-100"
+                            onLoad={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                const windowWidth = window.innerWidth * 0.8;
+                                const windowHeight = window.innerHeight * 0.8;
+
+                                // 如果图片小于窗口80%，原尺寸显示；否则按比例缩放
+                                if (img.naturalWidth <= windowWidth && img.naturalHeight <= windowHeight) {
+                                    setImageDimensions({
+                                        width: img.naturalWidth,
+                                        height: img.naturalHeight,
+                                    });
+                                } else {
+                                    const ratio = Math.min(
+                                        windowWidth / img.naturalWidth,
+                                        windowHeight / img.naturalHeight
+                                    );
+                                    setImageDimensions({
+                                        width: Math.round(img.naturalWidth * ratio),
+                                        height: Math.round(img.naturalHeight * ratio),
+                                    });
+                                }
+                            }}
                         />
                     </div>
                 </DialogContent>
@@ -847,47 +937,154 @@ export default function SubmissionGallery() {
 
             {/* 3D模型预览模态框 */}
             <Dialog open={modelPreviewOpen} onOpenChange={setModelPreviewOpen}>
-                <DialogContent className="!max-w-4xl !max-h-[90vh] overflow-hidden p-0 rounded-2xl">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="flex items-center gap-2">
-                            <Box className="w-5 h-5 text-blue-500" />
-                            3D模型预览
-                        </DialogTitle>
-                        <DialogDescription>{modelPreviewData?.fileName}</DialogDescription>
-                    </DialogHeader>
-                    <div className="p-6">
-                        {modelPreviewData && (
-                            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                                <StlModelViewer
-                                    fileUrl={modelPreviewData.fileUrl}
-                                    fileName={modelPreviewData.fileName}
-                                />
+                <DialogContent className="!max-w-4xl !max-h-[90vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white [&>button]:hidden">
+                    <VisuallyHidden>
+                        <DialogTitle>3D模型预览 - {modelPreviewData?.fileName || ''}</DialogTitle>
+                    </VisuallyHidden>
+                    {modelPreviewData && (
+                        <>
+                            {/* 标题栏 - 蓝青渐变 */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                        <Box className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-semibold text-base">
+                                            {modelPreviewData.fileName}
+                                        </h3>
+                                        <p className="text-cyan-100 text-sm">STL 3D 模型</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-white/90 hover:text-white hover:bg-white/20 rounded-lg"
+                                        onClick={() => setModelPreviewOpen(false)}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+
+                            {/* 3D模型显示区域 - 浅色背景 */}
+                            <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg border border-blue-100">
+                                    <StlModelViewer
+                                        fileUrl={modelPreviewData.fileUrl}
+                                        fileName={modelPreviewData.fileName}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
 
             {/* VOX模型预览模态框 */}
             <Dialog open={voxPreviewOpen} onOpenChange={setVoxPreviewOpen}>
-                <DialogContent className="!max-w-4xl !max-h-[90vh] overflow-hidden p-0 rounded-2xl">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="flex items-center gap-2">
-                            <Layers className="w-5 h-5 text-purple-500" />
-                            VOX模型预览
-                        </DialogTitle>
-                        <DialogDescription>{voxPreviewData?.fileName}</DialogDescription>
-                    </DialogHeader>
-                    <div className="p-6">
-                        {voxPreviewData && (
-                            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                                <VoxModelViewer
-                                    fileUrl={voxPreviewData.fileUrl}
-                                    fileName={voxPreviewData.fileName}
-                                />
+                <DialogContent className="!max-w-4xl !max-h-[90vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white [&>button]:hidden">
+                    <VisuallyHidden>
+                        <DialogTitle>VOX模型预览 - {voxPreviewData?.fileName || ''}</DialogTitle>
+                    </VisuallyHidden>
+                    {voxPreviewData && (
+                        <>
+                            {/* 标题栏 - 紫粉渐变 */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                        <Layers className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-semibold text-base">
+                                            {voxPreviewData.fileName}
+                                        </h3>
+                                        <p className="text-pink-100 text-sm">VOX 体素模型</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-white/90 hover:text-white hover:bg-white/20 rounded-lg"
+                                        onClick={() => setVoxPreviewOpen(false)}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+
+                            {/* VOX模型显示区域 - 浅色背景 */}
+                            <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg border border-purple-100">
+                                    <VoxModelViewer
+                                        fileUrl={voxPreviewData.fileUrl}
+                                        fileName={voxPreviewData.fileName}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* TXT文本预览模态框 */}
+            <Dialog open={txtPreviewOpen} onOpenChange={setTxtPreviewOpen}>
+                <DialogContent className="!max-w-3xl !max-h-[85vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white [&>button]:hidden">
+                    <VisuallyHidden>
+                        <DialogTitle>文本预览 - {txtPreviewData?.fileName || ''}</DialogTitle>
+                    </VisuallyHidden>
+                    {txtPreviewData && (
+                        <>
+                            {/* 标题栏 - 绿色渐变 */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                        <FileType className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-semibold text-base">
+                                            {txtPreviewData.fileName}
+                                        </h3>
+                                        <p className="text-green-100 text-sm">
+                                            {formatFileSize(txtPreviewData.fileSize)} · {txtPreviewData.content.length} 字符
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-white/90 hover:text-white hover:bg-white/20 rounded-lg"
+                                        onClick={() => setTxtPreviewOpen(false)}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* 文本内容区域 - 浅色友好背景 */}
+                            <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                                <div className="max-h-[60vh] overflow-auto rounded-xl bg-amber-50 border border-amber-100 p-5 shadow-inner">
+                                    <pre className="font-mono text-sm text-gray-700 whitespace-pre-wrap break-words leading-relaxed">
+                                        {txtPreviewData.content}
+                                    </pre>
+                                </div>
+                            </div>
+
+                            {/* 底部信息栏 */}
+                            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                                <div className="flex items-center justify-between text-gray-400 text-xs">
+                                    <span className="flex items-center gap-1">
+                                        <FileText className="w-3 h-3" />
+                                        纯文本文件
+                                    </span>
+                                    <span>按 ESC 键关闭</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </AppLayout>

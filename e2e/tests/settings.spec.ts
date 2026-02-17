@@ -34,7 +34,7 @@ test.describe('设置页面测试', () => {
     
     // 检查控制台错误
     const consoleErrors = await page.evaluate(() => {
-      return (window as any).consoleErrors || [];
+      return (window as { consoleErrors?: string[] }).consoleErrors || [];
     });
     console.log('控制台错误:', consoleErrors.length > 0 ? consoleErrors : '无');
     

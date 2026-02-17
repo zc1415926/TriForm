@@ -27,23 +27,25 @@ interface AssignmentData {
     is_published: boolean;
 }
 
+interface LessonFormData {
+    name: string;
+    year: string;
+    is_active: boolean;
+    content: string;
+    assignments: AssignmentData[];
+}
+
 interface LessonFormProps {
     uploadTypes: UploadType[];
-    initialData: {
-        name: string;
-        year: string;
-        is_active: boolean;
-        content: string;
-        assignments: AssignmentData[];
-    };
+    initialData: LessonFormData;
     lessonId?: string | number;
     onSubmit: (e: React.FormEvent) => void;
     processing: boolean;
     errors: Record<string, string>;
     submitLabel: string;
     processingLabel: string;
-    data: typeof initialData;
-    setData: (key: keyof typeof initialData, value: any) => void;
+    data: LessonFormData;
+    setData: (key: keyof LessonFormData, value: unknown) => void;
 }
 
 export function LessonForm({
@@ -72,7 +74,7 @@ export function LessonForm({
     const removeAssignment = (index: number) => {
         setData(
             'assignments',
-            data.assignments.filter((_, i) => i !== index)
+            data.assignments.filter((_assignment: AssignmentData, i: number) => i !== index)
         );
     };
 
@@ -170,7 +172,7 @@ export function LessonForm({
 
                         {data.assignments.length > 0 && (
                             <div className="grid gap-4">
-                                {data.assignments.map((assignment, index) => (
+                                {data.assignments.map((assignment: AssignmentData, index: number) => (
                                     <div
                                         key={index}
                                         className="rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"

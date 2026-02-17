@@ -110,11 +110,11 @@ class SubmissionController extends Controller
                 ->distinct()
                 ->orderBy('year', 'desc')
                 ->pluck('year')
-                ->map(fn ($y) => (string) $y);
+                ->map(fn ($y) => (string) $y)
+                ->values()
+                ->all();
 
-            return response()->json([
-                'years' => $years,
-            ]);
+            return response()->json($years);
         }
 
         // 返回指定年份的学生列表
@@ -122,9 +122,7 @@ class SubmissionController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return response()->json([
-            'students' => $students,
-        ]);
+        return response()->json($students);
     }
 
     public function getLessonsByYear(Request $request): \Illuminate\Http\JsonResponse

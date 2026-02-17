@@ -25,7 +25,7 @@ test.describe('🔘 核心按钮功能测试', () => {
                 { selector: 'a[href="/submissions"]', name: '作品提交' },
             ];
 
-            for (const { selector, name } of buttons) {
+            for (const { selector, name: _name } of buttons) {
                 const button = page.locator(selector).first();
                 if (await button.count() > 0) {
                     await expect(button).toBeVisible();
@@ -113,7 +113,7 @@ test.describe('🔘 核心按钮功能测试', () => {
                 { href: '/submissions/show', text: '作品提交' },
             ];
 
-            for (const { href, text } of navLinks) {
+            for (const { href, text: _text } of navLinks) {
                 const link = page.locator(`nav a[href="${href}"], header a[href="${href}"]`).first();
                 if (await link.count() > 0) {
                     await expect(link).toBeVisible();

@@ -76,7 +76,7 @@ export default function StudentReport() {
     useEffect(() => {
         axios.get('/api/submissions/students-by-year')
             .then(response => {
-                const yearList = response.data.years || [];
+                const yearList = response.data as string[];
                 setYears(yearList);
                 if (yearList.length > 0 && !selectedYear) {
                     setSelectedYear(yearList[0]);

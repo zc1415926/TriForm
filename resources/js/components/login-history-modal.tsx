@@ -46,9 +46,9 @@ export function LoginHistoryModal({ isOpen, onClose, teacherName, currentStudent
 
     useEffect(() => {
         if (isOpen) {
-            setLoading(true);
             // 使用 requestAnimationFrame 避免同步 setState
             requestAnimationFrame(() => {
+                setLoading(true);
                 loadRecords();
             });
         }
