@@ -578,8 +578,8 @@ export default function SubmissionGallery() {
                         <p className="text-gray-400 text-sm mt-1">快来上传你的第一个作品吧</p>
                     </div>
                 ) : viewMode === 'grid' ? (
-                    // 网格视图
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    // 网格视图 - 新设计
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {submissions.map((submission, index) => {
                             const fileTypeInfo = getFileTypeInfo(submission.file_name);
                             const FileIcon = fileTypeInfo.icon;
@@ -587,126 +587,108 @@ export default function SubmissionGallery() {
                             return (
                                 <Card
                                     key={submission.id}
-                                    variant="colored"
-                                    className="group overflow-hidden hover-lift cursor-pointer"
+                                    className="group overflow-hidden border-0 shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1 bg-white rounded-2xl"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    {/* 作品截图 */}
+                                    {/* 作品截图区域 */}
                                     <div
-                                        className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer overflow-hidden"
+                                        className="relative aspect-[4/3] cursor-pointer overflow-hidden"
                                         onClick={(e) => handleImageClick(e, submission)}
                                     >
                                         {getDisplayImagePath(submission) ? (
                                             <img
                                                 src={getDisplayImagePath(submission)!}
                                                 alt={submission.file_name}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center">
-                                                <div className={`w-20 h-20 rounded-2xl ${fileTypeInfo.color} flex items-center justify-center`}>
-                                                    <FileIcon className="size-10" />
+                                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                                <div className={`w-16 h-16 rounded-2xl ${fileTypeInfo.color} flex items-center justify-center shadow-lg`}>
+                                                    <FileIcon className="size-8" />
                                                 </div>
                                             </div>
                                         )}
                                         
-                                        {/* 文件类型标签 */}
-                                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium ${fileTypeInfo.color}`}>
+                                        {/* 文件类型标签 - 毛玻璃效果 */}
+                                        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm shadow-md text-gray-700 flex items-center gap-1.5">
+                                            <FileIcon className="w-3.5 h-3.5" />
                                             {fileTypeInfo.label}
                                         </div>
-                                        
-                                        {/* 悬停遮罩 */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                                            <span className="text-white text-sm font-medium flex items-center gap-1">
-                                                <Sparkles className="w-4 h-4" />
-                                                {fileTypeInfo.type === 'image' ? '查看大图' :
-                                                 fileTypeInfo.type === 'model' ? '3D预览' :
-                                                 fileTypeInfo.type === 'vox' ? 'VOX预览' : '打开文件'}
-                                            </span>
-                                        </div>
-
-                                        {/* 分数徽章 */}
+                                        {/* 分数徽章 - 更醒目 */}
                                         {submission.score !== null && (
-                                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold shadow-lg ${getScoreColor(submission.score)}`}>
-                                                {submission.score}分
+                                            <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-bold shadow-lg border-2 border-white ${getScoreColor(submission.score)}`}>
+                                                <span className="flex items-center gap-1">
+                                                    <Star className="w-3.5 h-3.5" />
+                                                    {submission.score}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <CardHeader className="p-5 pb-3">
-                                        <div className="text-base font-bold text-gray-800 truncate">
-                                            {submission.assignment.lesson?.name || '未知课时'}
+                                    {/* 内容区域 */}
+                                    <div className="p-4">
+                                        {/* 课程和作业信息 */}
+                                        <div className="mb-3">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500" />
+                                                <div className="text-sm font-bold text-gray-800 truncate">
+                                                    {submission.assignment.lesson?.name || '未知课时'}
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-gray-500 truncate pl-3.5">
+                                                {submission.assignment.name}
+                                            </div>
                                         </div>
-                                        <div className="text-sm text-gray-500 truncate mt-1">
-                                            {submission.assignment.name}
-                                        </div>
-                                    </CardHeader>
 
-                                    <CardContent className="p-5 pt-0">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                                        {/* 学生信息和互动 */}
+                                        <div className="flex items-start justify-between pt-3 border-t border-gray-100">
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-md shrink-0">
                                                     {submission.student.name.charAt(0)}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="text-sm font-medium text-gray-700 truncate">{submission.student.name}</div>
-                                                    <div className="text-xs text-gray-400">{submission.student.year}年</div>
+                                                <div className="min-w-0 flex flex-col gap-0.5">
+                                                    <div className="text-sm font-semibold text-gray-700 truncate">{submission.student.name}</div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="text-xs text-gray-400">
-                                                {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
-                                            </div>
-                                        </div>
-
-                                        {/* 互动按钮 */}
-                                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex-1 h-9 text-gray-500 hover:text-pink-500 hover:bg-pink-50 rounded-lg"
+                                            
+                                            {/* 点赞数 */}
+                                            <button
+                                                className="flex items-center gap-1 text-gray-400 hover:text-pink-500 transition-colors mt-1"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleLike(submission.id);
                                                 }}
                                             >
-                                                <Heart className="w-4 h-4 mr-1.5" />
-                                                <span className="text-sm">{submission.likes_count || 0}</span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="flex-1 h-9 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleShare(submission);
-                                                }}
-                                            >
-                                                <Share2 className="w-4 h-4 mr-1.5" />
-                                                <span className="text-sm">分享</span>
-                                            </Button>
+                                                <Heart className={`w-4 h-4 ${(submission.likes_count || 0) > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                                <span className="text-xs font-medium">{submission.likes_count || 0}</span>
+                                            </button>
                                         </div>
-                                    </CardContent>
+                                    </div>
                                 </Card>
                             );
                         })}
                     </div>
                 ) : viewMode === 'list' ? (
-                    // 列表视图
-                    <div className="space-y-4">
-                        {submissions.map((submission) => {
+                    // 列表视图 - 新设计
+                    <div className="space-y-3">
+                        {submissions.map((submission, index) => {
                             const fileTypeInfo = getFileTypeInfo(submission.file_name);
                             const FileIcon = fileTypeInfo.icon;
                             
                             return (
                                 <Card
                                     key={submission.id}
-                                    variant="soft"
-                                    className="group hover-lift cursor-pointer overflow-hidden"
-                                    onClick={(e) => handleImageClick(e, submission)}
+                                    className="group overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-white rounded-xl hover:bg-gray-50/50"
                                 >
-                                    <div className="flex items-center gap-5 p-5">
-                                        {/* 缩略图 */}
-                                        <div className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl flex items-center justify-center ${fileTypeInfo.color.replace('text-', 'bg-').replace('100', '50')}`}>
+                                    <div className="flex items-center gap-4 p-4">
+                                        {/* 缩略图 - 带边框 */}
+                                        <div 
+                                            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 border-gray-100 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center shadow-sm cursor-pointer"
+                                            onClick={(e) => handleImageClick(e, submission)}
+                                        >
                                             {getDisplayImagePath(submission) ? (
                                                 <img
                                                     src={getDisplayImagePath(submission)!}
@@ -714,45 +696,51 @@ export default function SubmissionGallery() {
                                                     className="h-full w-full object-cover"
                                                 />
                                             ) : (
-                                                <FileIcon className={`size-8 ${fileTypeInfo.color.split(' ')[1]}`} />
+                                                <FileIcon className={`size-7 ${fileTypeInfo.color.split(' ')[1]}`} />
                                             )}
                                         </div>
 
-                                        {/* 信息 */}
+                                        {/* 信息区域 */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${fileTypeInfo.color}`}>
+                                                <Badge variant="secondary" className={`${fileTypeInfo.color} text-xs font-medium`}>
                                                     {fileTypeInfo.label}
-                                                </span>
-                                                <div className="font-bold text-gray-800">{submission.assignment.lesson?.name || '未知课时'}</div>
+                                                </Badge>
+                                                <div className="font-bold text-gray-800 text-sm">{submission.assignment.lesson?.name || '未知课时'}</div>
                                             </div>
-                                            <div className="text-sm text-gray-500 mb-2">{submission.assignment.name}</div>
-                                            <div className="flex items-center gap-4 text-sm">
+                                            <div className="text-sm text-gray-500 mb-1.5">{submission.assignment.name}</div>
+                                            <div className="flex items-center gap-3 text-xs">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
                                                         {submission.student.name.charAt(0)}
                                                     </div>
-                                                    <span className="text-gray-600">{submission.student.name}</span>
+                                                    <span className="text-gray-600 font-medium">{submission.student.name}</span>
                                                 </div>
-                                                <span className="text-gray-400">·</span>
-                                                <span className="text-gray-500">{submission.student.year}年</span>
-                                                <span className="text-gray-400">·</span>
-                                                <span className="text-gray-500">{formatFileSize(submission.file_size)}</span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className="text-gray-400">
+                                                    {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className="text-gray-400">{formatFileSize(submission.file_size)}</span>
                                             </div>
                                         </div>
 
-                                        {/* 分数和时间 */}
-                                        <div className="text-right shrink-0">
+                                        {/* 右侧信息 */}
+                                        <div className="flex items-center gap-4 shrink-0">
+                                            {/* 分数 */}
                                             {submission.score !== null ? (
-                                                <div className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-lg font-bold shadow-md mb-2 ${getScoreColor(submission.score)}`}>
-                                                    <Star className="w-5 h-5" />
+                                                <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm ${getScoreColor(submission.score)}`}>
+                                                    <Star className="w-3.5 h-3.5" />
                                                     {submission.score}
                                                 </div>
                                             ) : (
-                                                <div className="text-gray-400 text-sm mb-2">未评分</div>
+                                                <Badge variant="secondary" className="bg-gray-100 text-gray-500">未评分</Badge>
                                             )}
-                                            <div className="text-xs text-gray-400">
-                                                {new Date(submission.created_at).toLocaleDateString('zh-CN')}
+                                            
+                                            {/* 点赞数 */}
+                                            <div className="flex items-center gap-1 text-gray-400">
+                                                <Heart className={`w-4 h-4 ${(submission.likes_count || 0) > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                                <span className="text-xs">{submission.likes_count || 0}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -761,79 +749,87 @@ export default function SubmissionGallery() {
                         })}
                     </div>
                 ) : (
-                    // 瀑布流视图
-                    <div className="columns-1 sm:columns-2 md:columns-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 space-y-8">
-                        {submissions.map((submission) => {
+                    // 瀑布流视图 - 新设计
+                    <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 space-y-6">
+                        {submissions.map((submission, index) => {
                             const fileTypeInfo = getFileTypeInfo(submission.file_name);
                             const FileIcon = fileTypeInfo.icon;
                             
                             return (
                                 <Card
                                     key={submission.id}
-                                    variant="colored"
-                                    className="group overflow-hidden hover-lift cursor-pointer break-inside-avoid"
+                                    className="group overflow-hidden border-0 shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1 bg-white rounded-2xl break-inside-avoid mb-6"
                                 >
                                     <div
-                                        className="relative bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer overflow-hidden"
+                                        className="relative cursor-pointer overflow-hidden"
                                         onClick={(e) => handleImageClick(e, submission)}
                                     >
                                         {getDisplayImagePath(submission) ? (
                                             <img
                                                 src={getDisplayImagePath(submission)!}
                                                 alt={submission.file_name}
-                                                className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
+                                                className="w-full h-auto transition-all duration-500 group-hover:scale-105"
                                             />
                                         ) : (
-                                            <div className="flex aspect-[4/3] w-full items-center justify-center">
-                                                <div className={`w-20 h-20 rounded-2xl ${fileTypeInfo.color} flex items-center justify-center`}>
-                                                    <FileIcon className="size-10" />
+                                            <div className="flex aspect-[4/3] w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                                <div className={`w-16 h-16 rounded-2xl ${fileTypeInfo.color} flex items-center justify-center shadow-lg`}>
+                                                    <FileIcon className="size-8" />
                                                 </div>
                                             </div>
                                         )}
                                         
-                                        {/* 文件类型标签 */}
-                                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium ${fileTypeInfo.color}`}>
+                                        {/* 文件类型标签 - 毛玻璃 */}
+                                        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm shadow-md text-gray-700 flex items-center gap-1.5">
+                                            <FileIcon className="w-3.5 h-3.5" />
                                             {fileTypeInfo.label}
                                         </div>
-                                        
-                                        {/* 悬停遮罩 */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                                            <span className="text-white text-sm font-medium flex items-center gap-1">
-                                                <Sparkles className="w-4 h-4" />
-                                                查看详情
-                                            </span>
-                                        </div>
-
                                         {/* 分数徽章 */}
                                         {submission.score !== null && (
-                                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold shadow-lg ${getScoreColor(submission.score)}`}>
-                                                {submission.score}分
+                                            <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-bold shadow-lg border-2 border-white ${getScoreColor(submission.score)}`}>
+                                                <span className="flex items-center gap-1">
+                                                    <Star className="w-3.5 h-3.5" />
+                                                    {submission.score}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <CardHeader className="p-5 pb-3">
-                                        <div className="text-base font-bold text-gray-800 truncate">
-                                            {submission.assignment.lesson?.name || '未知课时'}
-                                        </div>
-                                        <div className="text-sm text-gray-500 truncate mt-1">
-                                            {submission.assignment.name}
-                                        </div>
-                                    </CardHeader>
-
-                                    <CardContent className="p-5 pt-0">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
-                                                    {submission.student.name.charAt(0)}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="text-sm font-medium text-gray-700 truncate">{submission.student.name}</div>
-                                                    <div className="text-xs text-gray-400">{submission.student.year}年</div>
+                                    {/* 内容区域 */}
+                                    <div className="p-4">
+                                        {/* 课程信息 */}
+                                        <div className="mb-3">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500" />
+                                                <div className="text-sm font-bold text-gray-800 truncate">
+                                                    {submission.assignment.lesson?.name || '未知课时'}
                                                 </div>
                                             </div>
+                                            <div className="text-xs text-gray-500 truncate pl-3.5">
+                                                {submission.assignment.name}
+                                            </div>
                                         </div>
-                                    </CardContent>
+
+                                        {/* 学生信息 */}
+                                        <div className="flex items-start justify-between pt-3 border-t border-gray-100">
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md shrink-0">
+                                                    {submission.student.name.charAt(0)}
+                                                </div>
+                                                <div className="min-w-0 flex flex-col gap-0.5">
+                                                    <div className="text-xs font-semibold text-gray-700 truncate">{submission.student.name}</div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {new Date(submission.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* 点赞数 */}
+                                            <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                                                <Heart className={`w-3.5 h-3.5 ${(submission.likes_count || 0) > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                                <span className="text-xs">{submission.likes_count || 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </Card>
                             );
                         })}
